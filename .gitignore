@@ -1,0 +1,10 @@
+.idea
+.vscode
+.DS_Store
+node_modules
+dist
+
+
+data.zip
+xash.js
+*.wasm

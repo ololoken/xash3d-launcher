@@ -1,0 +1,31 @@
+{
+  "translation": {
+    "menu": {
+      "Toggle Console": "Переключить отображение консоли",
+      "Select data folder": "Указать папку с ресурсами игры",
+      "Remove data": "Удалить ресурсы",
+      "Run": "Запустить",
+      "Select zip archive": "Архив zip",
+      "Toggle Fullscreen": "На весь экран",
+      "Add game data": "Загрузка ресурсов игры",
+      "Try demo": "Демо-версия"
+    },
+    "error": {
+      "Internal Server Error": "Очень серьезная ошибка",
+      "Server error 500. we fixing the problem. please try again at a later stage.": "Server error 500. we fixing the problem. please try again at a later stage.",
+      "Back To Home": "На главную",
+      "The page you are looking was moved, removed, renamed, or might never exist!": "The page you are looking was moved, removed, renamed, or might never exist!",
+      "Page Not Found": "Страница не найден",
+      "Failed to sync FS": "Ошибка синхронизации файловой системы",
+      "WASM module start failed": "Ошибка запуска модуля wasm"
+    },
+    "confirm": {
+      "Are you sure?": "Удалить данные?"
+    },
+    "Data bundle looks ok. Continue initialization...": "Все загружено. Будем запускаться...",
+    "Starting wasm module...": "Запускаем модуль wasm...",
+    "Looking up data in [{{path}}]": "Поиск данных в [{{path}}]",
+    "No local data found... Building local cache.": "Не все данные найдены в локальном кеше, начинаю загрузку...",
+    "Local data found we are ready to start...": "Все готово к запуску игры"
+  }
+}

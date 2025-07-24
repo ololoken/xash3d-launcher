@@ -1,0 +1,24 @@
+{
+  "translation": {
+    "menu": {
+      "Toggle Console": "Toggle Console",
+      "Select data folder": "Select data folder",
+      "Remove data": "Remove data",
+      "Run": "Run",
+      "Select zip archive": "Select zip archive",
+      "Toggle Fullscreen": "Toggle Fullscreen",
+      "Add game data": "Add game data",
+      "Try demo": "Try demo"
+    },
+    "error": {
+      "Internal Server Error": "Internal Server Error",
+      "Server error 500. we fixing the problem. please try again at a later stage.": "Server error 500. we fixing the problem. please try again at a later stage.",
+      "Back To Home": "Back To Home",
+      "The page you are looking was moved, removed, renamed, or might never exist!": "The page you are looking was moved, removed, renamed, or might never exist!",
+      "Page Not Found": "Page Not Found"
+    },
+    "confirm": {
+      "Are you sure?": "Are you sure?"
+    }
+  }
+}

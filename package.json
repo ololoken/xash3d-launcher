@@ -1,0 +1,40 @@
+{
+  "name": "ems-runner-xash",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite --mode development --force --port 8086",
+    "build": "tsc && vite build --mode production --emptyOutDir",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "roman@turch.in",
+  "license": "take everything and give nothing back",
+  "type": "module",
+  "description": "",
+  "devDependencies": {
+    "@ant-design/colors": "7.2.1",
+    "@ant-design/icons": "6.0.0",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/lab": "7.0.0-beta.14",
+    "@mui/material": "7.2.0",
+    "@types/node": "24.1.0",
+    "@types/react-dom": "19.1.6",
+    "@vitejs/plugin-react": "4.7.0",
+    "@zip.js/zip.js": "2.7.68",
+    "concurrently": "9.2.0",
+    "history": "5.3.0",
+    "i18next-browser-languagedetector": "8.2.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-i18next": "15.6.1",
+    "react-router": "7.7.0",
+    "react-router-dom": "7.7.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vite-plugin-commonjs": "0.10.4"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.45.1",
+    "@rollup/rollup-linux-x64-musl": "4.45.1"
+  }
+}
