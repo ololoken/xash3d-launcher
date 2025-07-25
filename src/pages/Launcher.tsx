@@ -100,6 +100,7 @@ export default () => {
     ModuleInstance({
       ENV: {
         XASH3D_RODIR: '/xash/rodir',
+        XASH3D_BASEDIR: '/xash',
         HOME: '/xash',
       },
       canvas: canvas.current!,
@@ -127,6 +128,11 @@ export default () => {
 
   useEffect(() => {
     if (!instance) return;
+    Object.assign(instance,  {
+      callbacks: {
+        fsSyncRequired: () => instance.FS.syncfs(res => { console.log('synced', res) })
+      }
+    })
     Object.assign(window,  { instance });//debug purposes
     instance.print(t(`Looking up data in [{{path}}]`, { path: instance.ENV.HOME }));
 
@@ -181,7 +187,7 @@ export default () => {
   const runInstance = () => {
     if (!instance || mainRunning) return;
     try {
-      instance.callMain(['-noip6', '-dev', '-windowed', '-game', 'valve', '-ref', 'gl4es']);
+      instance.callMain(['-noip6', '-console', '-windowed', '-game', 'valve', '-ref', 'gl4es']);
     }
     catch (e) {
       console.log(e);

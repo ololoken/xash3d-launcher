@@ -21,7 +21,7 @@ export const ModuleInstance = ({ ENV, reportDownloadProgress, pushMessage, canva
     preInit: [() => {
       Object.assign(module.ENV, ENV)
     }],
-    dynamicLibraries: ['cl_dlls/menu_emscripten_wasm32.wasm', 'filesystem_stdio.wasm', 'libref_gl4es.wasm', 'cl_dlls/client_emscripten_wasm32.wasm', 'dlls/hl_emscripten_wasm32.so'],
+    dynamicLibraries: ['cl_dlls/menu_emscripten_wasm32.wasm', 'filesystem_stdio.wasm', 'libref_gl4es.wasm', 'libref_gles3compat.wasm', 'cl_dlls/client_emscripten_wasm32.wasm', 'dlls/hl_emscripten_wasm32.so'],
     preRun: [
       () => {
         module.addRunDependency('fs-sync')
