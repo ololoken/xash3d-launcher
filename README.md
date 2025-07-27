@@ -12,4 +12,7 @@ build hlsdk-portable
 
 copy output to `src/assets/module`
 
-
+To run the game you'll need data pack:
+1. cd /path/to/hl/valve
+2. `zip -r -9 data.zip .`
+3. copy data.zip to `src/assets/module`
