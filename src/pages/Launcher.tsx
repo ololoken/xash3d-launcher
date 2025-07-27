@@ -187,7 +187,7 @@ export default () => {
   const runInstance = () => {
     if (!instance || mainRunning) return;
     try {
-      instance.callMain(['-noip6', '-console', '-windowed', '-game', 'valve', '-ref', 'gl4es']);
+      instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2', '-dev', '2']);
     }
     catch (e) {
       console.log(e);
@@ -264,7 +264,7 @@ export default () => {
         <canvas id="canvas" ref={canvas} width={800} height={600} style={{
           width: '100%', height: '100%', position: 'absolute', zIndex: 100,
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          maxWidth: 'calc(100vh * 800 / 600)'
+          maxWidth: 'calc(100vh * 800 / 600)', background: '#000'
         }}></canvas>
       </CardContent>
       {downloadProgress ? <Box sx={{ position: 'absolute', display: 'inline-flex', zIndex: 120, top: 'calc(100vh / 2 - 100px)', left: 'calc(100vw / 2 - 100px)' }}>
