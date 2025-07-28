@@ -104,16 +104,8 @@ export default () => {
         HOME: '/xash',
       },
       canvas: canvas.current!,
-      NET_IsSocketValid: (socket: number) => {
-        console.log(socket);
-        return 1;
-      },
       pushMessage,
       reportDownloadProgress: () => {},
-      wz_js_display_loading_indicator: (s: number) => {
-        setWzLoading(Boolean(s));
-        return true;
-      },
       onExit: (code) => {
         console.info('!+EXIT+!', code);
         // add hook or iframe callback here
@@ -128,11 +120,11 @@ export default () => {
 
   useEffect(() => {
     if (!instance) return;
-    Object.assign(instance,  {
+    Object.assign(instance, {
       callbacks: {
-        fsSyncRequired: () => instance.FS.syncfs(res => { console.log('synced', res) })
+        fsSyncRequired: (reason: string) => instance?.FS.syncfs(res => { console.log(`${reason} synced`, res) })
       }
-    })
+    });
     Object.assign(window,  { instance });//debug purposes
     instance.print(t(`Looking up data in [{{path}}]`, { path: instance.ENV.HOME }));
 
