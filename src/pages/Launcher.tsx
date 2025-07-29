@@ -122,7 +122,7 @@ export default () => {
     if (!instance) return;
     Object.assign(instance, {
       callbacks: {
-        fsSyncRequired: (reason: string) => instance?.FS.syncfs(res => { console.log(`${reason} synced`, res) })
+        fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => instance?.FS.syncfs(res => { console.log(data, `synced`, res) })
       }
     });
     Object.assign(window,  { instance });//debug purposes
