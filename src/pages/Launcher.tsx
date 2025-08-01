@@ -25,6 +25,7 @@ import { ModuleInstance } from '../assets/module/module';
 import throwExpression from '../common/throwExpression';
 import { zipInputReader } from './dataInput';
 import gameData from '../assets/module/data.zip?url';
+import { VNet } from '../assets/module/vnet';
 
 export default () => {
   const { t } = useTranslation();
@@ -103,7 +104,7 @@ export default () => {
         XASH3D_BASEDIR: '/xash',
         HOME: '/xash',
       },
-      canvas: canvas.current!,
+      canvas: canvas.current,
       pushMessage,
       reportDownloadProgress: () => {},
       onExit: (code) => {
@@ -122,7 +123,7 @@ export default () => {
     if (!instance) return;
     Object.assign(instance, {
       callbacks: {
-        fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => instance?.FS.syncfs(res => { console.log(data, `synced`, res) })
+        fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => instance?.FS.syncfs(res => { console.log(data, `synced`, res) }),
       }
     });
     Object.assign(window,  { instance });//debug purposes

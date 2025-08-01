@@ -9,16 +9,27 @@ import client_emscripten_wasm32 from './client_emscripten_wasm32.wasm?url'
 import hl_emscripten_wasm32 from './hl_emscripten_wasm32.wasm?url'
 import xash from './xash.js'
 
+import VirtualNetworkWrapper from './vnet';
+
 export const ModuleInstance = ({ ENV, reportDownloadProgress, pushMessage, canvas, onExit, ...rest }: ModuleInitParams) => {
   let module: Module;
   return xash(module = <Module>{
     print: msg => module.printErr?.(msg),
     printErr: msg => pushMessage?.(msg),
     canvas,
-    preInit: [() => {
-      Object.assign(module.ENV, ENV)
-    }],
-    dynamicLibraries: ['cl_dlls/menu_emscripten_wasm32.wasm', 'filesystem_stdio.wasm', 'libref_webgl2.wasm', 'libref_soft.wasm', 'cl_dlls/client_emscripten_wasm32.wasm', 'dlls/hl_emscripten_wasm32.so'],
+    preInit: [
+      () => { Object.assign(module.ENV, ENV) }
+    ],
+    dynamicLibraries: [
+      'cl_dlls/menu_emscripten_wasm32.wasm',
+      'filesystem_stdio.wasm',
+      'libref_webgl2.wasm',
+      'libref_soft.wasm',
+
+      'cl_dlls/client_emscripten_wasm32.wasm',
+      'dlls/hl_emscripten_wasm32.so',
+
+    ],
     preRun: [
       () => {
         module.addRunDependency('fs-sync')
@@ -29,19 +40,24 @@ export const ModuleInstance = ({ ENV, reportDownloadProgress, pushMessage, canva
           module.removeRunDependency('fs-sync')
         });
       },
+      () => {
+        module.addRunDependency('net-not-ready')
+        VirtualNetworkWrapper(module).then(() => module.removeRunDependency('net-not-ready'))
+      }
     ],
     noInitialRun: true,
     onExit,
     locateFile: (path: string) => {
-      //xash3d engine
       console.log(path)
+      //xash3d engine
       if (path.endsWith('xash.wasm')) return wasm;
-      if (path.endsWith('menu_emscripten_wasm32.wasm')) return libmenu;
       if (path.endsWith('filesystem_stdio.wasm')) return filesystem_stdio;
+      //menu
+      if (path.endsWith('menu_emscripten_wasm32.wasm')) return libmenu;
+      //renderers
       if (path.endsWith('libref_webgl2.wasm')) return libref_webgl2;
       if (path.endsWith('libref_soft.wasm')) return libref_soft;
-
-      //client/server
+      //hl client/server
       if (path.endsWith('client_emscripten_wasm32.wasm')) return client_emscripten_wasm32;
       if (path.endsWith('hl_emscripten_wasm32.so')) return hl_emscripten_wasm32;
 

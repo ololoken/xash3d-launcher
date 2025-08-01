@@ -11,6 +11,11 @@ type BundleDirectory = { type: 'directory', name: string, size: number, contents
 type BundleReport = { type: 'report', directories: number, files: number }
 export type BundleNode = Array<BundleFile | BundleDirectory | BundleReport>
 
+type WASMType = 'i8' | 'i16' | 'i32' | 'i64' | 'float' | 'double' | '*' |
+                'i8*' | 'i16*' | 'i32*' | 'i64*' | 'float*' | 'double*';
+
+export type SockAddr = { family: number, addr: string, port: number }
+
 export type Module = {
   REMOTE_DATA_BASE_URL: string,
   REMOTE_DATA_BUNDLE: Array<BundleFile>
@@ -76,7 +81,36 @@ export type Module = {
   onExit: (code: number) => void
   noInitialRun: boolean
   run: () => void
-  callMain: (args?: any[]) => void
+  callMain: (args?: Array<number | string>) => void
+
+  getValue: (ptr: number, type: WASMType /* 'i8' */) => number
+  setValue: (ptr: number, value: number, type: WASMType /* 'i8' */) => void
+
+  writeArrayToMemory: (array: ArrayLike<number>, buffer: number) => void
+
+  UTF8ToString: (ptr: number, len?: number) => string
+  stringToUTF8: (str: string, outPtr: number, maxBytesToWrite: number) => number
+
+  net: any;
+
+  inetNtop4: (addr: string) => number
+  readSockaddr: (sa: number, salen: number) => SockAddr
+  writeSockaddr: (sa: number, family: number, addr: string, port: number, addrlen?: number) => number
+
+  AsciiToString: (ptr: number) => string
+  intArrayFromString: (stringy: string, dontAddNull?: boolean, length?: number) => Int8Array<ArrayBufferLike>
+
+  DNS: {
+    lookup_name: (name: string) => string
+  }
+
+  HEAP8: Int8Array
+  HEAPU8: Uint8Array
+  HEAP32: Int32Array
+  HEAPU32: Uint32Array
+
+  _maloc: (size: number) => number;
+
 } & Record<string, any>
 
 export type FSStream = {

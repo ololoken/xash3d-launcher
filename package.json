@@ -19,6 +19,7 @@
     "@mui/material": "7.2.0",
     "@types/node": "24.1.0",
     "@types/react-dom": "19.1.6",
+    "@types/ws": "8.18.1",
     "@vitejs/plugin-react": "4.7.0",
     "@zip.js/zip.js": "2.7.68",
     "concurrently": "9.2.0",
@@ -31,7 +32,8 @@
     "react-router-dom": "7.7.0",
     "typescript": "5.8.3",
     "vite": "6.3.5",
-    "vite-plugin-commonjs": "0.10.4"
+    "vite-plugin-commonjs": "0.10.4",
+    "ws": "8.18.3"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.45.1",
