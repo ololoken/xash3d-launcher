@@ -1,5 +1,21 @@
+[Live demo deathmatch](https://turch.in/dm/index.html) ~80mb
+=
+How to play demo
+-
+In the title you'll see _ololoken.NNNN_— this is your virtual lan host name.
+When you create LAN server another player can connect to your game using console command `connect ololoken.NNNN`.
+Just send him the link and your virtual host name.
+
+[Singleplayer demo](https://turch.in/xash3d-hl-en/index.html) ~200mb
+=
+
+
+In case of any issues open demos in private tab and/or using dev console purge indexeddb with name `/xash`.
+Dev tools console command is `indexedDB.deleteDatabase('/xash')`.
+
 
 build
+-
 xash3d with 
 ```
 emconfigure ./waf configure --emscripten && emmake ./waf build && emmake ./waf install --destdir ./out
