@@ -25,7 +25,6 @@ import { ModuleInstance } from '../assets/module/module';
 import throwExpression from '../common/throwExpression';
 import { zipInputReader } from './dataInput';
 import gameData from '../assets/module/data.zip?url';
-import { VNet } from '../assets/module/vnet';
 
 export default () => {
   const { t } = useTranslation();
@@ -203,8 +202,8 @@ export default () => {
         slotProps={{
           title: { variant: 'subtitle1' }
         }}
-        title={''}
-        sx={{ p: '8px 12px', height: '44px', '& .MuiCardHeader-action': { width: '100%' }, ...(import.meta.env.PROD ? {display: 'none'} : {}) }}
+        title={instance?.net?.getHostId()}
+        sx={{ p: '8px 12px', height: '44px', '& .MuiCardHeader-action': { width: '40%' }/*, ...(import.meta.env.PROD ? {display: 'none'} : {})*/ }}
         action={<>
           <Stack direction={"row"} spacing={2}>
             <Box flex={1} />
@@ -236,7 +235,7 @@ export default () => {
         m: 0,
         background: ``,
         backgroundSize: 'cover',
-        height: import.meta.env.PROD ? 'calc(100vh)' : 'calc(100vh - 46px)',
+        height: /*import.meta.env.PROD ? 'calc(100vh)' :*/ 'calc(100vh - 46px)',
         position: 'relative',
         '&:last-child': {
           paddingBottom: 0
@@ -322,7 +321,7 @@ export default () => {
           setOpenDeleteConfirmation(false);
           if (!status || !instance) return;
 
-          clearPath(`${instance.ENV.HOME}/data`);
+          clearPath(`${instance.ENV.HOME}/rodir/valve`);
           instance.FS.syncfs(false, err => {
             if (err) return instance.print(`Failed to remove data at [${instance.ENV.HOME}]`);
             setHasData(false)

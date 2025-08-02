@@ -14,7 +14,7 @@ const send_queue: Map<string,  Array<Uint8Array<ArrayBufferLike>>> = new Map();
 const recv_queue: Array<{ addr: SockAddr, data: Uint8Array<ArrayBufferLike> }>  = [];
 
 export default (h: Module) => {
-  const master = new WebSocket(`//${location.hostname}:4990`);
+  const master = new WebSocket(`//${location.hostname}${import. meta.env.PROD ? '/hl' : ':4990'}`);
 
 
   const allocaddrinfo = (saddr: string, port: number) => {
@@ -35,6 +35,8 @@ export default (h: Module) => {
   }
 
   h.net = {
+    getHostId: () => `ololoken.${hostId}`,
+
     recvfrom: (fd: number, bufPtr: number, bufLen: number, flags: number, sockaddrPtr: number, socklenPtr: number) => {
       const item = recv_queue.shift();
       if (!item) {
@@ -169,7 +171,9 @@ export default (h: Module) => {
           .then(answer => pc.setLocalDescription(answer))
           .then(() => master.send(JSON.stringify({ 'pc:answer': { description: pc.currentLocalDescription ?? pc.localDescription, from: to, to: from } })));
         pc.addEventListener('connectionstatechange', () => {
-          console.log(pc.connectionState)
+          switch (pc.connectionState) {
+            case 'failed': pc.restartIce(); break;
+          }
         });
         pc.addEventListener('icecandidate', ({ candidate }) => {
           if (!candidate) return;
