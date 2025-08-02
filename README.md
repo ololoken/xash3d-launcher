@@ -14,14 +14,17 @@ In case of any issues open demos in private tab and/or using dev console purge i
 Dev tools console command is `indexedDB.deleteDatabase('/xash')`.
 
 
-build
+How to build
 -
-xash3d with 
+
+> First, install and configure emsdk.
+
+[xash3d](https://github.com/ololoken/xash3d-fwgs) 
 ```
 emconfigure ./waf configure --emscripten && emmake ./waf build && emmake ./waf install --destdir ./out
 ```
 
-build hlsdk-portable
+[hlsdk-portable](https://github.com/ololoken/hlsdk-portable)
 ```
  emconfigure ./waf configure --emscripten -T release && emmake ./waf && emconfigure ./waf install --destdir out
 ```
@@ -32,3 +35,6 @@ To run the game you'll need data pack:
 1. cd /path/to/hl/valve
 2. `zip -r -9 data.zip .`
 3. copy data.zip to `src/assets/module`
+4. run server `npx tsx server.ts` in the source root 
+5. run `npm run dev` in the source root
+6. http://localhost:8086 here will be your game
