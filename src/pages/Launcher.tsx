@@ -146,7 +146,7 @@ export default () => {
         }
         return new Blob(chunks);
       })
-      .then(blob => zipInputReader(`${instance.ENV.HOME}/rodir/valve`, instance, blob))
+      .then(blob => zipInputReader(`${instance.ENV.HOME}/rodir/`, instance, blob))
       .then(setHasData)
       .catch(error => {
         instance.print(`Failed to build local data ${error.message ?? error}`);
@@ -179,7 +179,7 @@ export default () => {
   const runInstance = () => {
     if (!instance || mainRunning) return;
     try {
-      instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2', '-dev', '2']);
+      instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2', ...(import.meta.env.PROD ? ['-console'] : ['-dev', '2'])]);
     }
     catch (e) {
       console.log(e);
@@ -321,7 +321,7 @@ export default () => {
           setOpenDeleteConfirmation(false);
           if (!status || !instance) return;
 
-          clearPath(`${instance.ENV.HOME}/rodir/valve`);
+          clearPath(`${instance.ENV.HOME}/rodir/`);
           instance.FS.syncfs(false, err => {
             if (err) return instance.print(`Failed to remove data at [${instance.ENV.HOME}]`);
             setHasData(false)

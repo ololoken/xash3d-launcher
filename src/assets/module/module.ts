@@ -14,8 +14,8 @@ import VirtualNetworkWrapper from './vnet';
 export const ModuleInstance = ({ ENV, reportDownloadProgress, pushMessage, canvas, onExit, ...rest }: ModuleInitParams) => {
   let module: Module;
   return xash(module = <Module>{
-    print: msg => module.printErr?.(msg),
-    printErr: msg => pushMessage?.(msg),
+    print: msg => pushMessage(msg),
+    printErr: msg => pushMessage(msg),
     canvas,
     preInit: [
       () => { Object.assign(module.ENV, ENV) }
@@ -42,13 +42,14 @@ export const ModuleInstance = ({ ENV, reportDownloadProgress, pushMessage, canva
       },
       () => {
         module.addRunDependency('net-not-ready')
-        VirtualNetworkWrapper(module).then(() => module.removeRunDependency('net-not-ready'))
+        VirtualNetworkWrapper(module)
+          .then()
+          .finally(() => module.removeRunDependency('net-not-ready'))
       }
     ],
     noInitialRun: true,
     onExit,
     locateFile: (path: string) => {
-      console.log(path)
       //xash3d engine
       if (path.endsWith('xash.wasm')) return wasm;
       if (path.endsWith('filesystem_stdio.wasm')) return filesystem_stdio;

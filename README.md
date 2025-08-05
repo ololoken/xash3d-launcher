@@ -1,12 +1,12 @@
 [Live demo deathmatch](https://turch.in/dm/index.html) ~80mb
 =
-How to play demo
+How to play with friends
 -
 In the title you'll see _ololoken.NNNN_— this is your virtual lan host name.
 When you create LAN server another player can connect to your game using console command `connect ololoken.NNNN`.
-Just send him the link and your virtual host name.
+Just send him the link to the demo and your virtual host name.
 
-[Singleplayer demo](https://turch.in/xash3d-hl-en/index.html) ~200mb
+[Поиграть в русскую версию первой халфы](https://turch.in/zhl/index.html) ~200mb
 =
 
 
@@ -19,12 +19,12 @@ How to build
 
 > First, install and configure emsdk.
 
-[xash3d](https://github.com/ololoken/xash3d-fwgs) 
+[emscripten xash3d fork](https://github.com/ololoken/xash3d-fwgs) 
 ```
 emconfigure ./waf configure --emscripten && emmake ./waf build && emmake ./waf install --destdir ./out
 ```
 
-[hlsdk-portable](https://github.com/ololoken/hlsdk-portable)
+[emscripten hlsdk-portable fork](https://github.com/ololoken/hlsdk-portable)
 ```
  emconfigure ./waf configure --emscripten -T release && emmake ./waf && emconfigure ./waf install --destdir out
 ```

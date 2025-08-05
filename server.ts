@@ -15,7 +15,7 @@ wss.on('connection', (ws, req) => {
   const id = (() => {
     let id;
     do {
-      id = Math.floor(Math.random() * (255*255));
+      id = Math.floor(Math.random() * 9000) + 1000;
     } while (instances.has(id));
     return id;
   })();
@@ -33,21 +33,31 @@ wss.on('connection', (ws, req) => {
 
 
   ws.on('message', (data: RawData, isBinary: boolean) => {
-    const payload = <Payload>JSON.parse(data.toString());
-    switch (true) {
-      case 'pc:ice-candidate' in payload: {
-        const { to } = payload['pc:ice-candidate'];
-        instances.get(to)?.send(JSON.stringify(payload));
-      } break;
-      case 'pc:offer' in payload: {
-        const { to } = payload['pc:offer'];
-        instances.get(to)?.send(JSON.stringify(payload));
-      } break;
-      case 'pc:answer' in payload: {
-        const { to } = payload['pc:answer'];
-        instances.get(to)?.send(JSON.stringify(payload));
-      } break;
-      default:
+    try {
+      const payload = <Payload>JSON.parse(data.toString());
+      switch (true) {
+        case 'pc:ice-candidate' in payload: {
+          const { to } = payload['pc:ice-candidate'];
+          instances.get(to)?.send(JSON.stringify(payload));
+        } break;
+        case 'pc:offer' in payload: {
+          const { to } = payload['pc:offer'];
+          instances.get(to)?.send(JSON.stringify(payload));
+        } break;
+        case 'pc:answer' in payload: {
+          const { to } = payload['pc:answer'];
+          instances.get(to)?.send(JSON.stringify(payload));
+        } break;
+        default: throw 'not_supported'
+      }
+    }
+    catch (e) {
+      ws.close(3000, typeof e === 'string'
+        ? e
+        : (e instanceof Error
+          ? e.message
+          : 'unknown_error'
+        ))
     }
   });
 
