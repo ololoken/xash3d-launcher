@@ -10,8 +10,8 @@ const channels = new Map<number, RTCDataChannel>();
 
 const sockets: Map<number, Socket> = new Map();
 
-const send_queue: Map<string,  Array<Uint8Array<ArrayBufferLike>>> = new Map();
-const recv_queue: Array<{ addr: SockAddr, data: Uint8Array<ArrayBufferLike> }>  = [];
+const send_queue: Map<string,  Array<ArrayBuffer>> = new Map();
+const recv_queue: Array<{ addr: SockAddr, data: ArrayBuffer }>  = [];
 
 export default (h: Module) => {
   const master = new WebSocket(`//${location.hostname}${import. meta.env.PROD ? '/hl' : ':4990'}`);
@@ -82,7 +82,12 @@ export default (h: Module) => {
             dc.send(data);
           } while (send_queue.get(peer)?.length)
         });
-        dc.addEventListener('message', ({ data }: MessageEvent<Uint8Array>) => recv_queue.push({ addr, data })); //server response
+        dc.addEventListener('message', async ({ data }: MessageEvent<ArrayBuffer | Blob>) => recv_queue.push({
+          addr,
+          data: data instanceof Blob
+            ? await data.arrayBuffer()
+            : data
+        })); //server response
 
         peers.set(key, pc);
 
@@ -192,7 +197,12 @@ export default (h: Module) => {
             pc.addEventListener('datachannel', ({ channel }) => {
               channels.set(from, channel);
               const addr = { addr: `101.101.${((from >> 0) & 0xff)}.${((from >> 8) & 0xff)}`, port: from, family: 2 }
-              channel.addEventListener('message', ({ data }: MessageEvent<Uint8Array>) => recv_queue.push({ addr, data }));
+              channel.addEventListener('message', async ({ data }: MessageEvent<ArrayBuffer | Blob>) => recv_queue.push({
+                addr,
+                data: data instanceof Blob
+                  ? await data.arrayBuffer()
+                  : data
+              }));
             })
           } break;
           case 'pc:answer' in payload: {
