@@ -1,3 +1,4 @@
+
 [Live demo deathmatch](https://turch.in/dm/index.html) ~80mb
 =
 How to play with friends
@@ -5,6 +6,9 @@ How to play with friends
 In the title you'll see _ololoken.NNNN_— this is your virtual lan host name.
 When you create LAN server another player can connect to your game using console command `connect ololoken.NNNN`.
 Just send him the link to the demo and your virtual host name.
+
+![image](img.png)
+Here you can see running game server in iphone's browser with connected desktop client. 
 
 [Поиграть в русскую версию первой халфы](https://turch.in/zhl/index.html) ~200mb
 =
