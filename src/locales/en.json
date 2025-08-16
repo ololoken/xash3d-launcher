@@ -8,7 +8,9 @@
       "Select zip archive": "Select zip archive",
       "Toggle Fullscreen": "Toggle Fullscreen",
       "Add game data": "Add game data",
-      "Try demo": "Try demo"
+      "Try demo": "Try demo",
+      "Toggle Settings": "Toggle Settings",
+      "Link": "Invite your friends to join the game by sharing this link."
     },
     "error": {
       "Internal Server Error": "Internal Server Error",
@@ -17,8 +19,61 @@
       "The page you are looking was moved, removed, renamed, or might never exist!": "The page you are looking was moved, removed, renamed, or might never exist!",
       "Page Not Found": "Page Not Found"
     },
+    "settings": {
+      "Select map": "Select map"
+    },
     "confirm": {
       "Are you sure?": "Are you sure?"
+    },
+    "maps": {
+      "name": {
+        "boot_camp.bsp": "Bootcamp",
+        "bounce.bsp": "Bounce",
+        "crossfire.bsp": "Crossfire",
+        "datacore.bsp": "Datacore",
+        "frenzy.bsp": "Frenzy",
+        "killbox.bsp": "Killbox",
+        "pool_party.bsp": "Pool party",
+        "rapidcore.bsp": "Rapidcore",
+        "stalkyard.bsp": "Stalkyard",
+        "undertow.bsp": "Undertow"
+      },
+      "description": {
+        "boot_camp.bsp": "Originally developed for a special game mode that was cut from the final version of the game, the mod saw teams of two battle each other to find a loot box, which they then had to return to a \"base\" marked by four flagpoles. Players could only carry one weapon; if one of the players was killed, they were forced to wait until they respawned in a new round.",
+        "bounce.bsp": "It is a canyon divided into two parts by a high concrete wall, over which you can jump from alien ramps, and united by a network of analysis tunnels with small mountain lakes. The emphasis is on vertical gameplay.",
+        "crossfire.bsp": "Designed for large groups of players, the map consists of two parts: the first part (player spawn points) is three two-story buildings with a courtyard below ground level, containing weapons, as well as health and suit chargers, first aid kits, batteries, and long jump modules. Button-controlled elevators are the primary means of ascent in the buildings, while balconies and large windows allow for quick escape from the upper floors. The side of the complex facing the bunker has multiple exits from the area and provides ample cover.",
+        "datacore.bsp": "It's known for its complex layout with numerous corridors, ramps, and rooms, making it a popular choice for fast-paced combat. The map features a blend of brightly lit areas and darker spots, with some areas designed to break up the overall brightness.",
+        "frenzy.bsp": "Known for its small arena size and focus on intense combat. It features a Research Facility setting and is designed for 2-8 players. The map includes all weapons and numerous items and physics objects. The map is also notable for its nostalgic areas, staying true to the original while adding improved textures and features.",
+        "killbox.bsp": "Designed for intense, fast-paced deathmatch gameplay. These maps are typically characterized by simple, boxy structures, often with low detail and basic geometric shapes like cubes, pyramids, and slopes. The focus is on creating a space that encourages constant movement, quick engagements, and strategic use of overpowered weapons.",
+        "pool_party.bsp": "Is set on a human outpost in Xen, featuring healing pools and floating islands. The map's design emphasizes a \"relaxing stay\" at this Xen outpost, despite the questionable nature of its construction and the lack of clear explanation for how players can breathe in the environment. ",
+        "rapidcore.bsp": "It is a small network of technical corridors. The most notable is the room with the cooling tank - if you go into the tank itself and press the jump button, you can fly up and get to a metal ledge, where a tau gun lies in a square recess. However, if you jump back, the player will not receive damage, since this tank has very low gravity.",
+        "stalkyard.bsp": "Is a small Black Mesa warehouse with a bunch of boxes of different heights. Most likely, this warehouse is old, which can be assumed based on the presence of an old charger for the H.E.V. suit. This charger, however, cannot be used, as it is broken. On the second floor, in addition to the room with the charger, there are two balconies (on both sides of the warehouse), each of which has a heavy machine gun. The exits from the warehouse and the adjacent courtyards with balconies are connected to each other by a small tunnel with square boxes.",
+        "undertow.bsp": "The map's design resembles an old water canal (or sewer), with a nondescript two-story building built around it. However, if you go inside, you'll find conveyor belts on the ground floor on either side of the building."
+      }
+    },
+    "models": {
+      "barney": "Barney",
+      "bbbbarney": "B-B-B-Barney",
+      "gina": "Gina",
+      "gman": "G-Man",
+      "gordon": "Gordon",
+      "helmet": "Helmet",
+      "hgrunt": "Hgrunt",
+      "ivan": "Ivan",
+      "recon": "Recon",
+      "robo": "Robo",
+      "scientist": "Scientist",
+      "skeleton": "Skeleton",
+      "tmcm": "TMCM",
+      "zombie": "Zombie"
+    },
+    "input": {
+      "Player name": "Player name"
+    },
+    "buttons": {
+      "Play": "Play",
+      "Bots": "Bots",
+      "Connect {{name}}": "Connect {{name}}"
     }
   }
 }

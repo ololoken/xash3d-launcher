@@ -16,7 +16,7 @@ i18n
       escapeValue: false // react already safes from xss
     },
     resources: {
-      //'en-US': en,
+      'en-US': en,
       'ru-RU': ru,
     },
     nsSeparator: ''

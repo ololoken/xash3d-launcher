@@ -2,7 +2,9 @@
   "name": "ems-runner-xash",
   "version": "0.0.1",
   "scripts": {
-    "dev": "vite --mode development --force --port 8086",
+    "dev": "concurrently 'npm run dev-local' 'npm run sdk-dev-proxy'",
+    "dev-local": "vite --mode development --force --port 8086",
+    "sdk-dev-proxy": "npx @yandex-games/sdk-dev-proxy -h http://localhost:8086 --port 9090 -i 460673",
     "build": "tsc && vite build --mode production --emptyOutDir",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,28 +17,30 @@
     "@ant-design/icons": "6.0.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
-    "@mui/lab": "7.0.0-beta.14",
-    "@mui/material": "7.2.0",
-    "@types/node": "24.1.0",
-    "@types/react-dom": "19.1.6",
+    "@mui/lab": "7.0.0-beta.16",
+    "@mui/material": "7.3.1",
+    "@types/node": "24.3.0",
+    "@types/react-dom": "19.1.7",
     "@types/ws": "8.18.1",
     "@vitejs/plugin-react": "4.7.0",
-    "@zip.js/zip.js": "2.7.68",
+    "@zip.js/zip.js": "2.7.72",
     "concurrently": "9.2.0",
     "history": "5.3.0",
     "i18next-browser-languagedetector": "8.2.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
     "react-i18next": "15.6.1",
-    "react-router": "7.7.0",
-    "react-router-dom": "7.7.0",
-    "typescript": "5.8.3",
+    "react-router": "7.8.1",
+    "react-router-dom": "7.8.1",
+    "typescript": "5.9.2",
     "vite": "6.3.5",
     "vite-plugin-commonjs": "0.10.4",
-    "ws": "8.18.3"
+    "ws": "8.18.3",
+    "@yandex-games/sdk-dev-proxy": "0.0.2",
+    "@types/ysdk": "1.2.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.45.1",
-    "@rollup/rollup-linux-x64-musl": "4.45.1"
+    "@rollup/rollup-linux-x64-gnu": "4.46.2",
+    "@rollup/rollup-linux-x64-musl": "4.46.2"
   }
 }

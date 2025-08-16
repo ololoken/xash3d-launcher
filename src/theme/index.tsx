@@ -3,10 +3,10 @@ import { ReactNode, useMemo } from 'react';
 import { CssBaseline, StyledEngineProvider } from '@mui/material';
 import { createTheme, ThemeOptions, ThemeProvider, Theme, TypographyVariantsOptions } from '@mui/material/styles';
 import palette from './palette'
-import fontTtf from '../assets/fonts/NotoSerif-Black.ttf?url'
+import fontTtf from '../assets/fonts/FiraSans-Regular.ttf?url'
 
 export default function ThemeCustomization({ children }: { children: ReactNode }) {
-  const themeTypography: TypographyVariantsOptions = useMemo<TypographyVariantsOptions>(() => Typography(`'Inter', sans-serif`), []);
+  const themeTypography: TypographyVariantsOptions = useMemo<TypographyVariantsOptions>(() => Typography(`'FiraSans', 'Inter', 'sans-serif'`), []);
 
   const themeOptions: ThemeOptions = useMemo(
     () => ({
@@ -32,7 +32,7 @@ export default function ThemeCustomization({ children }: { children: ReactNode }
         MuiCssBaseline: {
           styleOverrides: `
             @font-face {
-              font-family: 'Fallout';
+              font-family: 'FiraSans';
               src: url('${fontTtf}') format('truetype');
             }
           `,

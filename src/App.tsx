@@ -1,6 +1,7 @@
 import './i18n'
 import Routes from './routes';
 import ThemeCustomization from './theme';
+import { YaGamesProvider } from './contexts/YaGamesContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,9 +31,10 @@ export default () => {
     return () => { onerror = onunhandledrejection = null }
   }, []);
 
+
   return (
     <ThemeCustomization>
-      <Routes />
+      <YaGamesProvider><Routes /></YaGamesProvider>
     </ThemeCustomization>
   );
 }

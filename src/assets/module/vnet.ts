@@ -51,7 +51,7 @@ export default (h: Module) => {
 
     sendto: (fd: number, bufPtr: number, lenPtr: number, flags: number, sockaddrPtr: number, socklenPtr: number) => {
       const addr = h.readSockaddr(sockaddrPtr, socklenPtr);
-      const data = h.HEAPU8.subarray(bufPtr, bufPtr+lenPtr);
+      const data = <Uint8Array<ArrayBuffer>>h.HEAPU8.subarray(bufPtr, bufPtr+lenPtr);
       const peer = `${addr.addr}:${addr.port}`;
 
       if (addr.addr === '255.255.255.255') return data.length; // ignore broadcast packets
@@ -66,7 +66,7 @@ export default (h: Module) => {
       }
 
       const queue = send_queue.get(peer) ?? []
-      queue.push(data);
+      queue.push(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
       send_queue.set(peer, queue);
 
       if (!peers.has(key)) {// create peer connection to server
@@ -88,6 +88,8 @@ export default (h: Module) => {
             ? await data.arrayBuffer()
             : data
         })); //server response
+        dc.addEventListener('closing', () => channels.delete(remoteId));
+        dc.addEventListener('close', () => channels.delete(remoteId));
 
         peers.set(key, pc);
 
@@ -203,6 +205,8 @@ export default (h: Module) => {
                   ? await data.arrayBuffer()
                   : data
               }));
+              channel.addEventListener('closing', () => channels.delete(from));
+              channel.addEventListener('close', () => channels.delete(from));
             })
           } break;
           case 'pc:answer' in payload: {
