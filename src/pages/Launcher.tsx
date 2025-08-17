@@ -1,13 +1,19 @@
 import {
   Box,
-  Card, CardContent, CardHeader,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
   CircularProgress,
+  IconButton,
+  InputAdornment,
+  Slider,
   Stack,
+  TextField,
   ToggleButton,
   Tooltip,
   Typography,
-  tooltipClasses, Button, TextField, InputAdornment,
-  IconButton,
+  tooltipClasses,
 } from '@mui/material';
 
 import BackgroundImage from '../assets/images/hldm.png';
@@ -21,9 +27,9 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
+import { CopyOutlined, SettingTwoTone, SoundOutlined } from '@ant-design/icons';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
-import {CopyOutlined, SettingTwoTone} from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation} from 'react-i18next';
@@ -56,6 +62,7 @@ export default () => {
   const [connectPayload, setConnectPayload] = useState<{ connect: string, name: string }>()
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [volume, setVolume] = useState(0.0);
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
@@ -124,36 +131,29 @@ export default () => {
         console.info('!+EXIT+!', code);
         // add hook or iframe callback here
       },
-      print: msg => {console.log(msg); messages.push(msg)},
+      print: msg => messages.push(msg),
       printErr: msg => messages.push(msg)
     })
       .then(instance => {
         Object.assign(instance, {
           callbacks: {
-            fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => instance?.FS.syncfs(res => { console.log(data, `synced`, res) }),
+            fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => setTimeout(() => instance?.FS.syncfs(res => console.log(data, `synced`, res)), 500),
             gameReady: () => {
               sdk.features.LoadingAPI.ready();
               setMainRunning(true);
               instance.executeString('scr_conspeed 1048576');
+              instance.getCVar('volume').then((vol: string) => setVolume(Number(vol)));
             }
           },
           executeString: instance.cwrap('Cmd_ExecuteString', 'number', ['string']),
-          getCVar: (name: string) => new Promise((resolve, reject) => {
-            const start = Date.now();
-            messages.length = 0;
-            const hTimer = setInterval(() => {
-              const msg = messages.find(msg => msg.includes(`"${name}" is`));
-              if (!msg && Date.now() - start > 100) {
-                clearInterval(hTimer);
-                return reject('timeout');
-              }
-              clearInterval(hTimer);
-              const [{ groups }] = msg?.matchAll(new RegExp(`"${name}" is "(?<value>[^"]*)"`, 'gm')) ?? [{ groups: { value: '' } }];
-              return resolve(groups?.value);
-            }, 0);
-            instance.executeString(name);
-          }),
-          waitMessage: (lookupMsg: string, timeout = 1000) => new Promise<void>((resolve, reject) => {
+          getCVar: (name: string) => {
+            return instance.waitMessage(`"${name}" is`, 1000, name)
+              .then((msg: string) => {
+                const [{ groups }] = msg?.matchAll(new RegExp(`"${name}" is "(?<value>[^"]*)"`, 'gm')) ?? [{ groups: { value: '' } }];
+                 return groups?.value
+              })
+          },
+          waitMessage: (lookupMsg: string, timeout = 1000, cmd = '') => new Promise<string>((resolve, reject) => {
             const start = Date.now();
             messages.length = 0;
             const hTimer = setInterval(() => {
@@ -164,10 +164,12 @@ export default () => {
               }
               if (msg) {
                 clearInterval(hTimer);
-                return resolve();
+                return resolve(msg);
               }
             }, 0);
-            instance.executeString('status');
+            if (cmd) {
+              instance.executeString(cmd);
+            }
           })
         });
         setInstance(instance);
@@ -232,6 +234,18 @@ export default () => {
     }
   };
 
+  useEffect(() => {
+    if (!instance || !mainRunning) return;
+    instance.executeString(`volume ${volume}`);
+  }, [volume]);
+
+  const serverUrl = ((url) => {
+    url.searchParams.append('payload', JSON.stringify({
+      connect: instance?.net?.getHostId(),
+      name: playerName
+    }))
+    return url;
+  })(new URL('https://yandex.ru/games/app/460673'));
 
   const runInstance = () => {
     if (!instance || mainRunning) return;
@@ -265,7 +279,6 @@ export default () => {
           <Stack direction={"row"} spacing={2}>
             {serverRunning && <BotsMenu instance={instance} />}
             <Box flex={1} />
-
             {(serverRunning && instance?.net?.getHostId()) && <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
                 } }}}><TextField
@@ -280,36 +293,27 @@ export default () => {
                   },
                   input: {
                     endAdornment: <InputAdornment position="end">
-                      <IconButton onClick={() => {
-                        navigator.clipboard.writeText(String(((url) => {
-                          url.searchParams.append('payload', JSON.stringify({
-                            connect: instance?.net?.getHostId(),
-                            name: playerName
-                          }))
-                          return url;
-                        })(new URL('https://yandex.ru/games/app/460673'))))
-                          .then()
-                      }}>
+                      <IconButton onClick={ () => navigator.clipboard.writeText(String(serverUrl)).then() }>
                         <CopyOutlined />
                       </IconButton>
                     </InputAdornment>
                   }
                 }}
-                value={((url) => {
-                  url.searchParams.append('payload', JSON.stringify({
-                    connect: instance?.net?.getHostId(),
-                    name: playerName
-                  }))
-                  return url;
-                })(new URL('https://yandex.ru/games/app/460673'))}
+                value={serverUrl}
                 fullWidth
             /></Tooltip>}
-            <Box flex={1} />
+            {mainRunning && <><Box flex={1} />
+            <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
+              <SoundOutlined />
+              <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.1} sx={{ minWidth: 120 }} />
+            </Stack>
+            <Box flex={1} /></>}
             {!readyToRun && <CircularProgress color="warning" size="34px" />}
             <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
                 } }}}>
               <ToggleButton value={-1} selected={showSettings} sx={{ p: '3px 6px', height: '36px' }} onClick={() => {
+                if ((!serverRunning || !connected) && showSettings) return;
                 setShowSettings(!showSettings)
               }}>
                 <SettingTwoTone style={{ fontSize: '2.4em' }} />
