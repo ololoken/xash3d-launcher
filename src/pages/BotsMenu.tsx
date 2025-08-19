@@ -1,45 +1,33 @@
-import { Module } from '../types/Module';
-import {Button, IconButton, Menu, MenuItem, Switch} from '@mui/material';
 import BotIcon from '../components/icons/BotIcon';
-import {useTranslation} from "react-i18next";
-import {useState} from "react";
+import { IconButton, Menu, MenuItem, Switch } from '@mui/material';
+import { Module } from '../types/Module';
+import {Dispatch, SetStateAction, useState} from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type Props = {
   instance?: Module
+  enabledBots: BotSkill[]
+  setEnabledBots: Dispatch<SetStateAction<BotSkill[]>>
 }
 
-//const bots = ['o6pblra', 'cpuHKaPb', 'MaMuH nupo}l{oK', 'nopK', 'cKycp']
-const bots = [{
-  name: 'bot0',
-  model: 'recon',
-  skill: 2
-}, {
-  name: 'bot1',
-  model: 'recon',
-  skill: 3,
-}, {
-  name: 'bot2',
-  model: 'recon',
-  skill: 2
-}, {
-  name: 'bot3',
-  model: 'recon',
-  skill: 3
-}, {
-  name: 'bot4',
-  model: 'zombie',
-  skill: 1
-}, {
-  name: 'bot5',
-  model: 'zombie',
-  skill: 1,
-}, {
-  name: 'bot6',
-  model: 'zombie',
-  skill: 1,
-}]
+export const botByLevel = {
+  '5': {
+    model: 'recon',
+    names: ['o6pblra', 'cpuHKaPb', 'nopK', 'cKycp']
+  },
+  '3': {
+    model: 'hgrunt',
+    names: ['cBuHoJloB', 'eBpoKyK', 'kuHgepHacTy/7']
+  },
+  '1': {
+    model: 'robo',
+    names: ['6aprJlagep', '6apeH']
+  }
+}
 
-export default ({ instance }: Props) => {
+export type BotSkill = (keyof typeof botByLevel);
+
+export default ({ instance, setEnabledBots, enabledBots }: Props) => {
   const { t } = useTranslation();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -50,7 +38,6 @@ export default ({ instance }: Props) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const [enabledBots, setEnabledBots] = useState<string[]>([]);
 
   return (<>
     <IconButton
@@ -69,15 +56,15 @@ export default ({ instance }: Props) => {
         horizontal: 'left',
       }}
     >
-      {bots.map(({ name, skill, model }) =>
-        <MenuItem key={name}>{name} <Switch checked={enabledBots.includes(name)} onChange={(e, checked) => {
+      {Object.entries(botByLevel).map(([skill, { names, model }]) =>
+        <MenuItem key={skill}>{t(`bots.${skill}`)} <Switch checked={enabledBots.includes(skill as BotSkill)} onChange={(e, checked) => {
           if (checked) {
-            setEnabledBots([name, ...enabledBots]);
-            instance?.executeString(`addbot ${model} ${name} ${skill}`);
+            setEnabledBots([skill as BotSkill, ...enabledBots]);
+            names.forEach(name => instance?.executeString(`addbot ${model} ${name} ${skill}`));
           }
           else {
-            setEnabledBots(enabledBots.filter(bn => bn !== name));
-            instance?.executeString(`kick "${name}"`)
+            setEnabledBots(enabledBots.filter(bn => bn !== skill));
+            names.forEach(name => instance?.executeString(`kick "${name}"`));
           }
         }} /></MenuItem>)}
     </Menu>

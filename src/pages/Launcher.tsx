@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 
 import BackgroundImage from '../assets/images/hldm.png';
-import BotsMenu from './BotsMenu';
+import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
 import GamepadIcon from '../components/icons/GamepadIcon';
 import MapConfig from './MapConfig';
 import PlayerConfig from './PlayerConfig';
@@ -60,6 +60,8 @@ export default () => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [volume, setVolume] = useState(0.0);
+  const [showTopBar, setShowTopBar] = useState(true);
+  const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
@@ -139,6 +141,7 @@ export default () => {
               sdk.features.LoadingAPI.ready();
               setMainRunning(true);
               instance.executeString('scr_conspeed 1048576');
+              instance.executeString('con_notifytime 0');
               instance.getCVar('volume').then((vol: string) => setVolume(Number(vol)));
             }
           },
@@ -244,6 +247,18 @@ export default () => {
     return url;
   })(new URL(import.meta.env.PROD ? 'https://yandex.ru/games/app/460673' : String(location)));
 
+  useEffect(() => {
+    const handle = () => {
+      setShowTopBar(!Boolean(document.pointerLockElement));
+    }
+    document.addEventListener('pointerlockchange', handle, false);
+    return () => {
+      document.removeEventListener('pointerlockchange', handle);
+    }
+  }, []);
+
+
+
   const runInstance = () => {
     if (!instance || mainRunning) return;
     instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2']);
@@ -255,21 +270,21 @@ export default () => {
       sx={{
         background: `url(${BackgroundImage}) center center`,
         backgroundSize: 'cover',
-        position: 'relative',
+        position: 'absolute',
+        width: '100%',
         border: 'none',
-        borderRadius: 1,
-        borderColor: theme.palette.divider,
       }}
     >
       <CardHeader
-        slotProps={{
-          title: { variant: 'subtitle1' }
-        }}
         title={''}
         sx={{
           background: theme.palette.background.default,
           p: '8px 14px 8px 0',
-          height: '44px',
+          height: 44,
+          position: 'absolute',
+          zIndex: 2000,
+          width: '100%',
+          display: showTopBar ? 'flex' : 'none',
           '& .MuiCardHeader-action': { width: '100%' }
         }}
         action={<>
@@ -293,7 +308,7 @@ export default () => {
                 value={serverUrl}
                 fullWidth
             /></Tooltip> : <Box flex={1} />}
-            {serverRunning && <BotsMenu instance={instance} />}
+            {serverRunning && <BotsMenu instance={instance} setEnabledBots={setEnabledBots} enabledBots={enabledBots} />}
             {mainRunning &&
               <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
                 <SoundOutlined />
@@ -304,7 +319,7 @@ export default () => {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
                 } }}}>
               <ToggleButton value={-1} selected={showSettings} sx={{ p: '3px 6px', height: '36px' }} onClick={() => {
-                if ((!serverRunning || !connected) && showSettings) return;
+                if (!serverRunning && !connected) return;
                 setShowSettings(!showSettings)
               }}>
                 <SettingTwoTone style={{ fontSize: '2.4em' }} />
@@ -318,7 +333,7 @@ export default () => {
         m: 0,
         background: ``,
         backgroundSize: 'cover',
-        height: /*import.meta.env.PROD ? 'calc(100vh)' :*/ 'calc(100vh - 44px)',
+        height: /*import.meta.env.PROD ? 'calc(100vh)' :*/ 'calc(100vh)',
         position: 'relative',
         '&:last-child': {
           paddingBottom: 0
@@ -332,7 +347,7 @@ export default () => {
           position: 'absolute',
           zIndex: 1000
         }}>
-          <Box sx={{ width: '100%' }}>
+          <Box sx={{ width: '100%', top: 44, position: 'relative' }}>
             {connectPayload
               ? <Stack direction="column" spacing={2} alignItems="center">
                   <Stack direction="row" spacing={2}>
@@ -373,9 +388,9 @@ export default () => {
                     disabled={serverStarting}
                     onClick={() => {
                       setServerStarting(true)
-                      for (let i = 0; i < 10; i++) {
-                        instance?.executeString(`kick bot${i}`);
-                      }
+                      enabledBots
+                        .flatMap(skill => botByLevel[skill].names)
+                        .forEach(name => instance?.executeString(`kick "${name}"`));
                       instance?.executeString('host_writeconfig');
                       instance?.executeString('deathmatch 1');
                       instance?.executeString('maxplayers 16');

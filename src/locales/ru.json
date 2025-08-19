@@ -77,6 +77,11 @@
       "Bots": "Боты",
       "Connect {{name}}": "Подключиться к {{name}}"
     },
+    "bots": {
+      "5": "4 простака",
+      "3": "3 середнячка",
+      "1": "2 профи"
+    },
     "Data bundle looks ok. Continue initialization...": "Все загружено. Будем запускаться...",
     "Starting wasm module...": "Запускаем модуль wasm...",
     "Looking up data in [{{path}}]": "Поиск данных в [{{path}}]",

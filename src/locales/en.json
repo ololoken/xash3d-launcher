@@ -74,6 +74,11 @@
       "Play": "Play",
       "Bots": "Bots",
       "Connect {{name}}": "Connect {{name}}"
+    },
+    "bots": {
+      "5": "4 noobs",
+      "3": "3 averages",
+      "1": "2 cyborgs"
     }
   }
 }

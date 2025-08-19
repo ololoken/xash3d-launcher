@@ -58,6 +58,10 @@ export default (h: Module) => {
           callback?.(pc.connectionState)
           pc.restartIce();
         } break;
+        case 'disconnected':
+        case 'closed': {
+          peers.delete(key);
+        } break;
       }
     });
   }
@@ -118,7 +122,7 @@ export default (h: Module) => {
         return data.length;
       }
       /**
-       * {{ almost useless code with pre-flight logic
+       * {{ almost useless code with pre-flight logic; possible can be used for future reconnect logic
        */
       const peer = `${addr.addr}:${addr.port}`;
       const queue = send_queue.get(peer) ?? []
@@ -213,6 +217,9 @@ export default (h: Module) => {
             pc.addEventListener('connectionstatechange', () => {
               switch (pc.connectionState) {
                 case 'failed': pc.restartIce(); break;
+                case 'closed':
+                case 'disconnected':
+                  peers.delete(`${to}:${from}`);
               }
             });
             pc.addEventListener('icecandidate', ({ candidate }) => {
