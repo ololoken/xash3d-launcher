@@ -53,17 +53,15 @@ export default ({ instance }: Props) => {
   const [enabledBots, setEnabledBots] = useState<string[]>([]);
 
   return (<>
-    <Button
-      variant="contained"
-      startIcon={<BotIcon />}
+    <IconButton
       onClick={handleClick}
-    >{t('buttons.Bots')}</Button>
+    ><BotIcon /></IconButton>
     <Menu
       anchorEl={anchorEl}
       open={open}
       onClose={handleClose}
       anchorOrigin={{
-        vertical: 'top',
+        vertical: 'bottom',
         horizontal: 'left',
       }}
       transformOrigin={{

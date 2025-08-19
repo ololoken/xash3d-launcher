@@ -14,8 +14,53 @@ const send_queue: Map<string,  Array<ArrayBuffer>> = new Map();
 const recv_queue: Array<{ addr: SockAddr, data: ArrayBuffer }>  = [];
 
 export default (h: Module) => {
-  const master = new WebSocket(`//${location.hostname}${import. meta.env.PROD ? '/hl' : ':4990'}`);
+  const master = new WebSocket(import. meta.env.PROD ? 'https://turch.in/hl' : `//${location.hostname}:4990`);
 
+
+  const connectToServer = (remoteId: number, addr: SockAddr, key: string, callback?: (err?: string) => void) => {
+    const peer = `${addr.addr}:${addr.port}`;
+    const pc = new RTCPeerConnection({ iceServers });
+
+    const dc = pc.createDataChannel(peer, { maxRetransmits: 0, ordered: false });
+
+    dc.addEventListener('open', () => {
+      channels.set(remoteId, dc);
+      do {
+        const data = send_queue.get(peer)?.shift();
+        if (!data) continue;
+        dc.send(data);
+      } while (send_queue.get(peer)?.length)
+      callback?.();
+    });
+    dc.addEventListener('message', async ({ data }: MessageEvent<ArrayBuffer | Blob>) => recv_queue.push({
+      addr,
+      data: data instanceof Blob
+        ? await data.arrayBuffer()
+        : data
+    })); //server response
+    dc.addEventListener('closing', () => channels.delete(remoteId));
+    dc.addEventListener('close', () => channels.delete(remoteId));
+
+    peers.set(key, pc);
+
+    pc.addEventListener('icecandidate', ({ candidate }) => {
+      if (!candidate) return;
+      master.send(JSON.stringify({ 'pc:ice-candidate': { candidate, from: hostId, to: remoteId } }));
+    });
+
+    pc.createOffer()
+      .then(sessionDescription => pc.setLocalDescription(sessionDescription))
+      .then(() => master.send(JSON.stringify({ 'pc:offer': { description: pc.currentLocalDescription ?? pc.localDescription, from: hostId, to: remoteId } })));
+
+    pc.addEventListener('connectionstatechange', () => {
+      switch (pc.connectionState) {
+        case 'failed': {
+          callback?.(pc.connectionState)
+          pc.restartIce();
+        } break;
+      }
+    });
+  }
 
   const allocaddrinfo = (saddr: string, port: number) => {
     var sa, ai;
@@ -34,8 +79,17 @@ export default (h: Module) => {
     return ai;
   }
 
+  h.preConnectToServer = (remoteId: number) =>
+    new Promise<void>((resolve, reject) => {
+      const addr = `101.101.${(remoteId >> 0) & 0xff}.${(remoteId >> 8) & 0xff}`
+      connectToServer(remoteId, { family: 2, addr, port: 27015 }, `${hostId}:${remoteId}`, err => {
+        if (err) return reject(err);
+        resolve();
+      })
+    });
+
   h.net = {
-    getHostId: () => hostId ? `ololoken.${hostId}` : '',
+    getHostId: () => hostId,
 
     recvfrom: (fd: number, bufPtr: number, bufLen: number, flags: number, sockaddrPtr: number, socklenPtr: number) => {
       const item = recv_queue.shift()
@@ -52,7 +106,6 @@ export default (h: Module) => {
     sendto: (fd: number, bufPtr: number, lenPtr: number, flags: number, sockaddrPtr: number, socklenPtr: number) => {
       const addr = h.readSockaddr(sockaddrPtr, socklenPtr);
       const data = <Uint8Array<ArrayBuffer>>h.HEAPU8.subarray(bufPtr, bufPtr+lenPtr);
-      const peer = `${addr.addr}:${addr.port}`;
 
       if (addr.addr === '255.255.255.255') return data.length; // ignore broadcast packets
 
@@ -64,50 +117,20 @@ export default (h: Module) => {
         channels.get(remoteId)?.send(data);
         return data.length;
       }
-
+      /**
+       * {{ almost useless code with pre-flight logic
+       */
+      const peer = `${addr.addr}:${addr.port}`;
       const queue = send_queue.get(peer) ?? []
       queue.push(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
       send_queue.set(peer, queue);
 
       if (!peers.has(key)) {// create peer connection to server
-        const pc = new RTCPeerConnection({ iceServers });
-
-        const dc = pc.createDataChannel(peer, { maxRetransmits: 0, ordered: false });
-
-        dc.addEventListener('open', () => {
-          channels.set(remoteId, dc);
-          do {
-            const data = send_queue.get(peer)?.shift();
-            if (!data) continue;
-            dc.send(data);
-          } while (send_queue.get(peer)?.length)
-        });
-        dc.addEventListener('message', async ({ data }: MessageEvent<ArrayBuffer | Blob>) => recv_queue.push({
-          addr,
-          data: data instanceof Blob
-            ? await data.arrayBuffer()
-            : data
-        })); //server response
-        dc.addEventListener('closing', () => channels.delete(remoteId));
-        dc.addEventListener('close', () => channels.delete(remoteId));
-
-        peers.set(key, pc);
-
-        pc.addEventListener('icecandidate', ({ candidate }) => {
-          if (!candidate) return;
-          master.send(JSON.stringify({ 'pc:ice-candidate': { candidate, from: hostId, to: remoteId } }));
-        });
-
-        pc.createOffer()
-          .then(sessionDescription => pc.setLocalDescription(sessionDescription))
-          .then(() => master.send(JSON.stringify({ 'pc:offer': { description: pc.currentLocalDescription ?? pc.localDescription, from: hostId, to: remoteId } })));
-
-        pc.addEventListener('connectionstatechange', () => {
-          switch (pc.connectionState) {
-            case 'failed': pc.restartIce(); break;
-          }
-        });
+        connectToServer(remoteId, addr, key);
       }
+      /**
+       * }} end of useless code
+       */
 
       return data.length;
     },

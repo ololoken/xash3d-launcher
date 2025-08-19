@@ -5,8 +5,6 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
-  IconButton,
-  InputAdornment,
   Slider,
   Stack,
   TextField,
@@ -27,10 +25,10 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
-import { CopyOutlined, SettingTwoTone, SoundOutlined } from '@ant-design/icons';
+import { SettingTwoTone, SoundOutlined } from '@ant-design/icons';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
-import { useEffect, useRef, useState } from 'react';
+import { FocusEvent, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation} from 'react-i18next';
 import { zipInputReader } from './dataInput';
@@ -51,7 +49,6 @@ export default () => {
 
   const [showSettings, setShowSettings] = useState(true)
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [downloadTimer, setDownloadTimer] = useState(0);
 
   const [selectedMap, setSelectedMap] = useState('crossfire.bsp');
   const [playerName, setPlayerName] = useState('');
@@ -245,7 +242,7 @@ export default () => {
       name: playerName
     }))
     return url;
-  })(new URL('https://yandex.ru/games/app/460673'));
+  })(new URL(import.meta.env.PROD ? 'https://yandex.ru/games/app/460673' : String(location)));
 
   const runInstance = () => {
     if (!instance || mainRunning) return;
@@ -271,16 +268,14 @@ export default () => {
         title={''}
         sx={{
           background: theme.palette.background.default,
-          p: '8px 12px',
+          p: '8px 14px 8px 0',
           height: '44px',
           '& .MuiCardHeader-action': { width: '100%' }
         }}
         action={<>
           <Stack direction={"row"} spacing={2}>
-            {serverRunning && <BotsMenu instance={instance} />}
-            <Box flex={1} />
-            {(serverRunning && instance?.net?.getHostId()) && <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
-                  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
+            {(serverRunning && instance?.net?.getHostId()) ? <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
+                  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { color: '#000', fontSize: '1em' }
                 } }}}><TextField
                 variant="outlined"
                 slotProps={{
@@ -290,24 +285,20 @@ export default () => {
                     onKeyPress: (e: KeyboardEvent) => e.stopPropagation(),
                     onKeyUp: (e: KeyboardEvent) => e.stopPropagation(),
                     onKeyDown: (e: KeyboardEvent) => e.stopPropagation(),
-                  },
-                  input: {
-                    endAdornment: <InputAdornment position="end">
-                      <IconButton onClick={ () => navigator.clipboard.writeText(String(serverUrl)).then() }>
-                        <CopyOutlined />
-                      </IconButton>
-                    </InputAdornment>
+                    onMouseDown: (e: MouseEvent) => e.stopPropagation(),
+                    onMouseUp: (e: MouseEvent) => e.stopPropagation(),
+                    onFocus: (e: FocusEvent) => (e.target as HTMLInputElement | undefined)?.select()
                   }
                 }}
                 value={serverUrl}
                 fullWidth
-            /></Tooltip>}
-            {mainRunning && <><Box flex={1} />
-            <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
-              <SoundOutlined />
-              <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.1} sx={{ minWidth: 120 }} />
-            </Stack>
-            <Box flex={1} /></>}
+            /></Tooltip> : <Box flex={1} />}
+            {serverRunning && <BotsMenu instance={instance} />}
+            {mainRunning &&
+              <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
+                <SoundOutlined />
+                <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.1} sx={{ minWidth: 120 }} />
+              </Stack>}
             {!readyToRun && <CircularProgress color="warning" size="34px" />}
             <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
@@ -354,14 +345,18 @@ export default () => {
                     sx={{ minWidth: '50%' }}
                     disabled={connecting}
                     onClick={() => {
-                      setConnecting(true)
+                      setConnecting(true);
                       instance?.executeString('host_writeconfig');
-                      instance?.executeString(`connect ${connectPayload?.connect}`);
-                      instance?.waitMessage('VoiceCapture_Init', 10000).then(() => {
-                        setShowSettings(false);
-                        setConnecting(false)
-                        setConnected(true)
-                      })
+                      instance?.preConnectToServer(connectPayload?.connect)
+                        .then(() => {
+                          instance?.executeString(`connect o.${connectPayload?.connect}`);
+                          return instance?.waitMessage('VoiceCapture_Init', 10000)
+                        })
+                        .then(() => {
+                          setShowSettings(false);
+                          setConnected(true)
+                        })
+                        .finally(() => setConnecting(false));
                     }}
                   >{t('buttons.Connect {{name}}', { name: connectPayload.name })}</Button>
                 </Stack>
@@ -424,15 +419,11 @@ export default () => {
             component="div"
             sx={{ color: 'text.primary' }}
           >{`${Math.round(downloadProgress)}%`}</Typography>
-          {downloadTimer ? <Typography
-              variant="subtitle1"
-              component="div"
-              sx={{ color: 'text.primary' }}
-          >{`${downloadTimer.toFixed(2)} c`}</Typography> : <Typography
+          <Typography
             variant="subtitle1"
             component="div"
             sx={{ color: 'text.primary' }}
-          >{Math.round(downloadProgress) === 100 ? 'Unpacking' : 'Downloading'}</Typography>}
+          >{Math.round(downloadProgress) === 100 ? 'Unpacking' : 'Downloading'}</Typography>
         </Box>
       </Box> : ''}
     </Card>
