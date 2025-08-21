@@ -13,15 +13,15 @@ export type Props = {
 export const botByLevel = {
   '5': {
     model: 'recon',
-    names: ['o6pblra', 'cpuHKaPb', 'nopK', 'cKycp']
+    names: ['recon1', 'recon2', 'recon3', 'recon4']
   },
   '3': {
     model: 'hgrunt',
-    names: ['cBuHoJloB', 'eBpoKyK', 'kuHgepHacTy/7']
+    names: ['hgrunt1', 'hgrunt2', 'hgrunt3']
   },
   '1': {
     model: 'robo',
-    names: ['6aprJlagep', '6apeH']
+    names: ['6aprJlagep', 'o6pblra']
   }
 }
 

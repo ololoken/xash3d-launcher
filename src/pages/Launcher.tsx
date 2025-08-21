@@ -287,6 +287,9 @@ export default () => {
           display: showTopBar ? 'flex' : 'none',
           '& .MuiCardHeader-action': { width: '100%' }
         }}
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+        onMouseUp={e => e.stopPropagation()}
         action={<>
           <Stack direction={"row"} spacing={2}>
             {(serverRunning && instance?.net?.getHostId()) ? <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
@@ -351,7 +354,7 @@ export default () => {
             {connectPayload
               ? <Stack direction="column" spacing={2} alignItems="center">
                   <Stack direction="row" spacing={2}>
-                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} />
+                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={5} />
                   </Stack>
                   <Button
                     size="large"
@@ -365,7 +368,7 @@ export default () => {
                       instance?.preConnectToServer(connectPayload?.connect)
                         .then(() => {
                           instance?.executeString(`connect o.${connectPayload?.connect}`);
-                          return instance?.waitMessage('VoiceCapture_Init', 10000)
+                          return instance?.waitMessage('Setting up renderer', 10000)
                         })
                         .then(() => {
                           setShowSettings(false);
@@ -375,10 +378,10 @@ export default () => {
                     }}
                   >{t('buttons.Connect {{name}}', { name: connectPayload.name })}</Button>
                 </Stack>
-              : <Stack direction="column" spacing={2} alignItems="center">
+              : <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
                   <Stack direction="row" spacing={2}>
                     <MapConfig instance={instance} selectedMap={selectedMap} setSelectedMap={setSelectedMap} />
-                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} />
+                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={4} />
                   </Stack>
                   <Button
                     size="large"
@@ -395,7 +398,7 @@ export default () => {
                       instance?.executeString('deathmatch 1');
                       instance?.executeString('maxplayers 16');
                       instance?.executeString(`map ${selectedMap}`);
-                      instance?.waitMessage('Custom resource propagation complete').then(() => {
+                      instance?.waitMessage('Setting up renderer').then(() => {
                         setShowSettings(false);
                         setServerStarting(false);
                         setServerRunning(true);
@@ -409,7 +412,7 @@ export default () => {
         <canvas id="canvas" ref={canvas} width={800} height={600} style={{
           width: '100%', height: '100%', position: 'absolute', zIndex: 100,
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          maxWidth: 'calc(100vh * 800 / 600)', background: mainRunning ? '#000' : 'transparent'
+          background: mainRunning ? '#000' : 'transparent'
         }}></canvas>
       </CardContent>
       {downloadProgress ? <Box sx={{ position: 'absolute', display: 'inline-flex', zIndex: 120, top: 'calc(100vh / 2 - 100px)', left: 'calc(100vw / 2 - 100px)' }}>

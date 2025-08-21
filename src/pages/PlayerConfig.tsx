@@ -10,9 +10,10 @@ export type Props = {
   mainRunning: boolean
   playerName: string
   setPlayerName: Dispatch<SetStateAction<string>>
+  cols: number
 }
 
-export default ({ instance, mainRunning, playerName, setPlayerName }: Props) => {
+export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Props) => {
   const { t } = useTranslation();
   const [playerModel, setPlayerModel] = useState('');
 
@@ -42,12 +43,24 @@ export default ({ instance, mainRunning, playerName, setPlayerName }: Props) => 
     instance?.executeString(`model ${playerModel}`)
   }, [playerModel]);
 
+  const getModelURL = (name: string) => {
+    try {
+      return URL.createObjectURL(new Blob([(instance?.FS.readFile(`${instance?.ENV.HOME}/rodir/valve/models/player/${name}/${name}.bmp`, { encoding: 'binary' })) ?? '']));
+    }
+    catch (ignore) {}
+    return 'data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+  }
+
   return (!mainRunning ? <></> :
     <Stack direction="column">
-      <ImageList cols={5} rowHeight={164}>
+      <ImageList {...{ cols }} rowHeight={164}>
         {Object.keys(instance?.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).map((item) => (
           <ImageListItem key={item} sx={{width: 120}} >
-            <img src={URL.createObjectURL(new Blob([(instance?.FS.readFile(`${instance?.ENV.HOME}/rodir/valve/models/player/${item}/${item}.bmp`, { encoding: 'binary' })) ?? '']))}/>
+            <img
+              alt={item}
+              src={getModelURL(item)}
+              onMouseDown={e => e.preventDefault()}
+            />
             <ImageListItemBar
               title={t(`models.${item}`)}
               sx={{ cursor: 'pointer' }}
