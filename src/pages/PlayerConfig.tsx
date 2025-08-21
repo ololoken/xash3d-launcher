@@ -54,7 +54,7 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
   return (!mainRunning ? <></> :
     <Stack direction="column">
       <ImageList {...{ cols }} rowHeight={164}>
-        {Object.keys(instance?.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).map((item) => (
+        {Object.keys(instance?.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).sort().map((item) => (
           <ImageListItem key={item} sx={{width: 120}} >
             <img
               alt={item}

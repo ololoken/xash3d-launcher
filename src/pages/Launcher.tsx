@@ -18,6 +18,7 @@ import BackgroundImage from '../assets/images/hldm.png';
 import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
 import GamepadIcon from '../components/icons/GamepadIcon';
 import MapConfig from './MapConfig';
+import MouseIcon from '../components/icons/MouseIcon';
 import PlayerConfig from './PlayerConfig';
 import configCfg from '../assets/module/config.cfg';
 import gameData from '../assets/module/data.zip?url';
@@ -60,6 +61,7 @@ export default () => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [volume, setVolume] = useState(0.0);
+  const [sensitivity, setSensitivity] = useState(0.0);
   const [showTopBar, setShowTopBar] = useState(true);
   const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
 
@@ -137,12 +139,13 @@ export default () => {
         Object.assign(instance, {
           callbacks: {
             fsSyncRequired: (data: { path: string, op: 'write' | 'delete' }) => setTimeout(() => instance?.FS.syncfs(res => console.log(data, `synced`, res)), 500),
-            gameReady: () => {
+            gameReady: async () => {
               sdk.features.LoadingAPI.ready();
               setMainRunning(true);
               instance.executeString('scr_conspeed 1048576');
               instance.executeString('con_notifytime 0');
-              instance.getCVar('volume').then((vol: string) => setVolume(Number(vol)));
+              await instance.getCVar('volume').then((vol: string) => setVolume(Number(vol)));
+              await instance.getCVar('sensitivity').then((sens: string) => setSensitivity(Number(sens)));
             }
           },
           executeString: instance.cwrap('Cmd_ExecuteString', 'number', ['string']),
@@ -239,6 +242,11 @@ export default () => {
     instance.executeString(`volume ${volume}`);
   }, [volume]);
 
+  useEffect(() => {
+    if (!instance || !mainRunning) return;
+    instance.executeString(`sensitivity ${sensitivity}`);
+  }, [sensitivity]);
+
   const serverUrl = ((url) => {
     url.searchParams.append('payload', JSON.stringify({
       connect: instance?.net?.getHostId(),
@@ -315,7 +323,12 @@ export default () => {
             {mainRunning &&
               <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
                 <SoundOutlined />
-                <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.1} sx={{ minWidth: 120 }} />
+                <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.05} sx={{ minWidth: 120 }} />
+              </Stack>}
+            {mainRunning &&
+              <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
+                <MouseIcon />
+                <Slider value={sensitivity} onChange={(ignore, value) => setSensitivity(value)} min={0.1} max={3.0} step={0.05} sx={{ minWidth: 120 }} />
               </Stack>}
             {!readyToRun && <CircularProgress color="warning" size="34px" />}
             <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
@@ -368,7 +381,7 @@ export default () => {
                       instance?.preConnectToServer(connectPayload?.connect)
                         .then(() => {
                           instance?.executeString(`connect o.${connectPayload?.connect}`);
-                          return instance?.waitMessage('Setting up renderer', 10000)
+                          return instance?.waitMessage('Setting up renderer', 60000)
                         })
                         .then(() => {
                           setShowSettings(false);
@@ -391,14 +404,13 @@ export default () => {
                     disabled={serverStarting}
                     onClick={() => {
                       setServerStarting(true)
-                      enabledBots
-                        .flatMap(skill => botByLevel[skill].names)
+                      enabledBots.flatMap(skill => botByLevel[skill].names)
                         .forEach(name => instance?.executeString(`kick "${name}"`));
                       instance?.executeString('host_writeconfig');
                       instance?.executeString('deathmatch 1');
                       instance?.executeString('maxplayers 16');
                       instance?.executeString(`map ${selectedMap}`);
-                      instance?.waitMessage('Setting up renderer').then(() => {
+                      instance?.waitMessage('Setting up renderer', 60000).then(() => {
                         setShowSettings(false);
                         setServerStarting(false);
                         setServerRunning(true);
