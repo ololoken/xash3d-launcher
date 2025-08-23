@@ -5,7 +5,6 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
-  Slider,
   Stack,
   TextField,
   ToggleButton,
@@ -18,8 +17,8 @@ import BackgroundImage from '../assets/images/hldm.png';
 import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
 import GamepadIcon from '../components/icons/GamepadIcon';
 import MapConfig from './MapConfig';
-import MouseIcon from '../components/icons/MouseIcon';
 import PlayerConfig from './PlayerConfig';
+import VolumeAndSensitivitySliders from './VolumeAndSensitivitySliders';
 import configCfg from '../assets/module/config.cfg';
 import gameData from '../assets/module/data.zip?url';
 import throwExpression from '../common/throwExpression';
@@ -60,8 +59,6 @@ export default () => {
   const [connectPayload, setConnectPayload] = useState<{ connect: string, name: string }>()
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [volume, setVolume] = useState(0.0);
-  const [sensitivity, setSensitivity] = useState(0.0);
   const [showTopBar, setShowTopBar] = useState(true);
   const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
 
@@ -132,7 +129,7 @@ export default () => {
         console.info('!+EXIT+!', code);
         // add hook or iframe callback here
       },
-      print: msg => messages.push(msg),
+      print: msg => {console.log(msg);messages.push(msg)},
       printErr: msg => messages.push(msg)
     })
       .then(instance => {
@@ -144,8 +141,6 @@ export default () => {
               setMainRunning(true);
               instance.executeString('scr_conspeed 1048576');
               instance.executeString('con_notifytime 0');
-              await instance.getCVar('volume').then((vol: string) => setVolume(Number(vol)));
-              await instance.getCVar('sensitivity').then((sens: string) => setSensitivity(Number(sens)));
             }
           },
           executeString: instance.cwrap('Cmd_ExecuteString', 'number', ['string']),
@@ -158,9 +153,9 @@ export default () => {
           },
           waitMessage: (lookupMsg: string, timeout = 1000, cmd = '') => new Promise<string>((resolve, reject) => {
             const start = Date.now();
-            messages.length = 0;
+            const offs = messages.length-1;
             const hTimer = setInterval(() => {
-              const msg = messages.find(msg => msg.includes(lookupMsg));
+              const msg = messages.find((msg, idx) => idx >= offs && msg.includes(lookupMsg));
               if (!msg && Date.now() - start > timeout) {
                 clearInterval(hTimer);
                 return reject('timeout');
@@ -237,16 +232,6 @@ export default () => {
     }
   };
 
-  useEffect(() => {
-    if (!instance || !mainRunning) return;
-    instance.executeString(`volume ${volume}`);
-  }, [volume]);
-
-  useEffect(() => {
-    if (!instance || !mainRunning) return;
-    instance.executeString(`sensitivity ${sensitivity}`);
-  }, [sensitivity]);
-
   const serverUrl = ((url) => {
     url.searchParams.append('payload', JSON.stringify({
       connect: instance?.net?.getHostId(),
@@ -300,7 +285,7 @@ export default () => {
         onMouseUp={e => e.stopPropagation()}
         action={<>
           <Stack direction={"row"} spacing={2}>
-            {(serverRunning && instance?.net?.getHostId()) ? <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
+            {(!connectPayload && instance?.net?.getHostId()) ? <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { color: '#000', fontSize: '1em' }
                 } }}}><TextField
                 variant="outlined"
@@ -319,17 +304,8 @@ export default () => {
                 value={serverUrl}
                 fullWidth
             /></Tooltip> : <Box flex={1} />}
-            {serverRunning && <BotsMenu instance={instance} setEnabledBots={setEnabledBots} enabledBots={enabledBots} />}
-            {mainRunning &&
-              <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
-                <SoundOutlined />
-                <Slider value={volume} onChange={(ignore, value) => setVolume(value)} min={0.0} max={1.0} step={0.05} sx={{ minWidth: 120 }} />
-              </Stack>}
-            {mainRunning &&
-              <Stack spacing={2} direction="row" sx={{ alignItems: 'center', mb: 1 }}>
-                <MouseIcon />
-                <Slider value={sensitivity} onChange={(ignore, value) => setSensitivity(value)} min={0.1} max={3.0} step={0.05} sx={{ minWidth: 120 }} />
-              </Stack>}
+            {serverRunning && <BotsMenu {...{instance, setEnabledBots, enabledBots, serverRunning}} />}
+            <VolumeAndSensitivitySliders {...{mainRunning, instance}} />
             {!readyToRun && <CircularProgress color="warning" size="34px" />}
             <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
                   [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }

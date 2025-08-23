@@ -1,14 +1,30 @@
 import { WebSocketServer, RawData, WebSocket } from 'ws';
 
+type ServerEntry = { id: number, name: string }
+
 export type Payload =
-  { init: { id: number } }
+    { 'init': { id: number } }
   | { 'pc:ice-candidate': { candidate: RTCIceCandidateInit, from: number, to: number } }
   | { 'pc:offer': { description: RTCSessionDescription, from: number, to: number } }
   | { 'pc:answer': { description: RTCSessionDescription, from: number, to: number } }
+  | { 'public': { name: string, status: boolean } }
+  | { 'list': '' }
+  | { 'sv:list': { servers: ServerEntry[] } }
 
 const instances = new Map<number, WebSocket>;
+const publicInstances = new Map<number, string>;
 
 const wss = new WebSocketServer({ port: 4990 });
+
+const sendPublicInstances = () => {
+  const servers: ServerEntry[] = [];
+  for (const [id, name] of publicInstances[Symbol.iterator]()) {
+    servers.push({ id, name })
+  }
+  instances.forEach(socket => {
+    socket.send(JSON.stringify({ 'sv:list': { servers } }));
+  })
+}
 
 wss.on('connection', (ws, req) => {
 
@@ -24,6 +40,9 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     instances.delete(id);
+    if (publicInstances.delete(id)) {
+      sendPublicInstances();
+    }
   })
 
   ws.on('error', err => {
@@ -48,6 +67,18 @@ wss.on('connection', (ws, req) => {
           const { to } = payload['pc:answer'];
           instances.get(to)?.send(JSON.stringify(payload));
         } break;
+        case 'public' in payload: {// mark instance as public
+          if (payload['public'].status) {
+            publicInstances.set(id, payload['public'].name);
+          }
+          else {
+            publicInstances.delete(id);
+          }
+          sendPublicInstances();
+        } break;
+        case 'list' in payload: {
+          sendPublicInstances();
+        } break;
         default: throw 'not_supported'
       }
     }
@@ -62,5 +93,6 @@ wss.on('connection', (ws, req) => {
   });
 
   ws.send(JSON.stringify({ init: { id } }));
+  sendPublicInstances();
 
 });
