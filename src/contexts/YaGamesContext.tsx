@@ -39,7 +39,10 @@ export const YaGamesProvider = ({ children }: Props) => {
           },
           getPlayer: () => Promise.resolve({
             getName: () => 'ololoken'
-          })
+          }),
+          clipboard: {
+            writeText: (str: string) => navigator.clipboard.writeText(str)
+          }
         } as unknown as SDK
       })
     }

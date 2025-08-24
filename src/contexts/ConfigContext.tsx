@@ -1,7 +1,7 @@
-import { createContext, ReactNode } from 'react';
 import config from '../config';
 import useLocalStorage from '../hooks/useLocalStorage';
-import {useTranslation} from "react-i18next";
+import { createContext, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type I18n =  'en-US' | 'ru-RU';
 

@@ -6,7 +6,6 @@ import {
   CardHeader,
   CircularProgress,
   Stack,
-  TextField,
   ToggleButton,
   Tooltip,
   Typography,
@@ -16,6 +15,7 @@ import {
 import BackgroundImage from '../assets/images/hldm.png';
 import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
 import GamepadIcon from '../components/icons/GamepadIcon';
+import InviteLink from './InviteLink';
 import MapConfig from './MapConfig';
 import PlayerConfig from './PlayerConfig';
 import VolumeAndSensitivitySliders from './VolumeAndSensitivitySliders';
@@ -25,10 +25,11 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
-import { SettingTwoTone, SoundOutlined } from '@ant-design/icons';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
-import { FocusEvent, useEffect, useRef, useState } from 'react';
+import { SettingTwoTone } from '@ant-design/icons';
+import { snackbar } from '../common/snackbar';
+import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation} from 'react-i18next';
 import { zipInputReader } from './dataInput';
@@ -232,14 +233,6 @@ export default () => {
     }
   };
 
-  const serverUrl = ((url) => {
-    url.searchParams.append('payload', JSON.stringify({
-      connect: instance?.net?.getHostId(),
-      name: playerName
-    }))
-    return url;
-  })(new URL(import.meta.env.PROD ? 'https://yandex.ru/games/app/460673' : String(location)));
-
   useEffect(() => {
     const handle = () => {
       setShowTopBar(!Boolean(document.pointerLockElement));
@@ -249,8 +242,6 @@ export default () => {
       document.removeEventListener('pointerlockchange', handle);
     }
   }, []);
-
-
 
   const runInstance = () => {
     if (!instance || mainRunning) return;
@@ -285,25 +276,10 @@ export default () => {
         onMouseUp={e => e.stopPropagation()}
         action={<>
           <Stack direction={"row"} spacing={2}>
-            {(!connectPayload && instance?.net?.getHostId()) ? <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
-                  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { color: '#000', fontSize: '1em' }
-                } }}}><TextField
-                variant="outlined"
-                slotProps={{
-                  htmlInput: {
-                    readOnly: true,
-                    sx: { padding: '5px 5px' },
-                    onKeyPress: (e: KeyboardEvent) => e.stopPropagation(),
-                    onKeyUp: (e: KeyboardEvent) => e.stopPropagation(),
-                    onKeyDown: (e: KeyboardEvent) => e.stopPropagation(),
-                    onMouseDown: (e: MouseEvent) => e.stopPropagation(),
-                    onMouseUp: (e: MouseEvent) => e.stopPropagation(),
-                    onFocus: (e: FocusEvent) => (e.target as HTMLInputElement | undefined)?.select()
-                  }
-                }}
-                value={serverUrl}
-                fullWidth
-            /></Tooltip> : <Box flex={1} />}
+            {(!connectPayload && instance?.net?.getHostId())
+              ? <InviteLink {...{ instance, playerName }} />
+              : <Box flex={1}
+              />}
             {serverRunning && <BotsMenu {...{instance, setEnabledBots, enabledBots, serverRunning}} />}
             <VolumeAndSensitivitySliders {...{mainRunning, instance}} />
             {readyToRun
@@ -336,7 +312,7 @@ export default () => {
           height: showSettings && mainRunning ? '100%' : 0,
           width: '100%',
           backdropFilter: 'blur(10px)',
-          overflowY: 'auto',
+          overflow: 'hidden',
           position: 'absolute',
           zIndex: 1000
         }}>
@@ -387,11 +363,21 @@ export default () => {
                       instance?.executeString('deathmatch 1');
                       instance?.executeString('maxplayers 16');
                       instance?.executeString(`map ${selectedMap}`);
-                      instance?.waitMessage('Setting up renderer', 60000).then(() => {
-                        setShowSettings(false);
-                        setServerStarting(false);
-                        setServerRunning(true);
-                      });
+                      instance?.waitMessage('Setting up renderer', 60000)
+                        .then(() => {
+                          setShowSettings(false);
+                          setServerStarting(false);
+                          setServerRunning(true);
+                        })
+                        .then(() => {
+                          setEnabledBots(['3', ...enabledBots]);
+                          botByLevel['3'].names.forEach(name => instance?.executeString(`addbot ${botByLevel['3'].model} ${name} 3`));
+                        })
+                        .finally(() => snackbar({
+                          open: true, close: false,
+                          variant: 'alert',
+                          message: t('snackbar.Hit `Esc` to open top bar menu and remove/add bots.')
+                        }));
                     }}
                   >{t('buttons.Play')}</Button>
                 </Stack>

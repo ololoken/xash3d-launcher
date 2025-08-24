@@ -1,5 +1,6 @@
 import './i18n'
 import Routes from './routes';
+import Snackbar from './components/Snackbar';
 import ThemeCustomization from './theme';
 import { YaGamesProvider } from './contexts/YaGamesContext';
 import { useEffect } from 'react';
@@ -9,7 +10,6 @@ export default () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    return;
     const handleError = (error: Error) => {
       switch (true) {
         case import.meta.env.DEV:
@@ -17,7 +17,7 @@ export default () => {
           return;
         default:
           console.error(error);
-          navigate(`${import.meta.env.BASE_URL}/error`);
+          //navigate(`${import.meta.env.BASE_URL}/error`);
       }
     };
     onerror = (message, file, lineNo, columnNo, error) => {
@@ -34,7 +34,10 @@ export default () => {
 
   return (
     <ThemeCustomization>
-      <YaGamesProvider><Routes /></YaGamesProvider>
+      <YaGamesProvider>
+        <Routes />
+        <Snackbar />
+      </YaGamesProvider>
     </ThemeCustomization>
   );
 }

@@ -75,7 +75,12 @@
       "Bots": "Bots",
       "Connect {{name}}": "Connect {{name}}",
       "Back": "Back",
-      "Next": "Next"
+      "Next": "Next",
+      "Copy": "Copy"
+    },
+    "snackbar": {
+      "Link Copied": "Link Copied",
+      "Hit `Esc` to open top bar menu and remove/add bots.": "Hit \"Esc\" to open top bar menu and remove/add bots."
     },
     "bots": {
       "5": "4 noobs",

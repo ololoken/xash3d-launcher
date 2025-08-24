@@ -29,7 +29,12 @@ export default ({ instance, setSelectedMap, selectedMap }: Props) => {
     <Stack direction="row">
       <List subheader={<ListSubheader>{t('settings.Select map')}</ListSubheader>} sx={{ minWidth: 120 }}>
         {Object.keys(instance?.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/maps`)?.object?.contents ?? {}).sort().map(name =>
-          <ListItemButton key={name} selected={selectedMap === name} onClick={() => setSelectedMap(name) }>
+          <ListItemButton
+            key={name}
+            dense
+            selected={selectedMap === name}
+            onClick={() => setSelectedMap(name)
+          }>
             <ListItemText secondary={t(`maps.name.${name}`)} />
           </ListItemButton>
         )}

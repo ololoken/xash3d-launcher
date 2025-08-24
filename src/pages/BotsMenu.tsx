@@ -1,5 +1,5 @@
 import BotIcon from '../components/icons/BotIcon';
-import { IconButton, Menu, MenuItem, Switch } from '@mui/material';
+import {Button, IconButton, Menu, MenuItem, Switch} from '@mui/material';
 import { Module } from '../types/Module';
 import {Dispatch, SetStateAction, useState} from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,9 +40,10 @@ export default ({ instance, setEnabledBots, enabledBots }: Props) => {
   };
 
   return (<>
-    <IconButton
+    <Button
       onClick={handleClick}
-    ><BotIcon /></IconButton>
+      startIcon={<BotIcon />}
+    >{t('buttons.Bots')}</Button>
     <Menu
       anchorEl={anchorEl}
       open={open}

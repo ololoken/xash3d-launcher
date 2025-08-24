@@ -44,11 +44,11 @@ const greyColors = {
 };
 const contrastText = '#fff';
 
-const primaryColors = ['#222130', '#2b2946', '#37335a', '#443e78', '#554ca0', '#655ac8', '#9186dd', '#5F53DF', '#c3baf4', '#efecfb'];
-const errorColors = ['#321d1d', '#7d2e28', '#FF4D4F', '#e66859', '#f8baaf'];
+const primaryColors = ['#32221a', '#4a2b18', '#5e371b', '#7d4319', '#a85317', '#d26415', '#e9883a', '#f4a962', '#f8c48c', '#fbdbb5'];
+const errorColors = ['#321d1d', '#7d2e28', '#d13c31', '#e66859', '#f8baaf'];
 const warningColors = ['#342c1a', '#836611', '#dda705', '#e9bf28', '#f8e577'];
-const infoColors = ['#1a2628', '#11595f', '#597EF7', '#1ea6aa', '#64cfcb'];
-const successColors = ['#1a2721', '#115c36', '#52C41A', '#1da65d', '#61ca8b'];
+const infoColors = ['#1a2628', '#11595f', '#058e98', '#1ea6aa', '#64cfcb'];
+const successColors = ['#1a2721', '#115c36', '#05934c', '#1da65d', '#61ca8b'];
 
 const paletteColor = {
   primary: {

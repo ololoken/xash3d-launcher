@@ -77,7 +77,12 @@
       "Bots": "Боты",
       "Connect {{name}}": "Подключиться к {{name}}",
       "Back": "Туда",
-      "Next": "Сюда"
+      "Next": "Сюда",
+      "Copy": "Скопировать"
+    },
+    "snackbar": {
+      "Link Copied": "Ссылка скопирована",
+      "Hit `Esc` to open top bar menu and remove/add bots.": "Нажмите \"Esc\" чтобы открыть меню и добавить/убрать ботов."
     },
     "bots": {
       "5": "4 простака",
