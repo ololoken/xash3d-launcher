@@ -306,17 +306,18 @@ export default () => {
             /></Tooltip> : <Box flex={1} />}
             {serverRunning && <BotsMenu {...{instance, setEnabledBots, enabledBots, serverRunning}} />}
             <VolumeAndSensitivitySliders {...{mainRunning, instance}} />
-            {!readyToRun && <CircularProgress color="warning" size="34px" />}
-            <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
-                  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
-                } }}}>
-              <ToggleButton value={-1} selected={showSettings} sx={{ p: '3px 6px', height: '36px' }} onClick={() => {
-                if (!serverRunning && !connected) return;
-                setShowSettings(!showSettings)
-              }}>
-                <SettingTwoTone style={{ fontSize: '2.4em' }} />
-              </ToggleButton>
-            </Tooltip>
+            {readyToRun
+              ? <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
+                    [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { marginTop: '0px', color: '#000', fontSize: '1em' }
+                  } }}}>
+                  <ToggleButton value={-1} selected={showSettings} sx={{ p: '3px 6px', height: '36px' }} onClick={() => {
+                    if (!serverRunning && !connected) return;
+                    setShowSettings(!showSettings)
+                  }}>
+                    <SettingTwoTone style={{ fontSize: '2.4em' }} />
+                  </ToggleButton>
+                </Tooltip>
+              : <CircularProgress color="warning" size="34px" />}
           </Stack>
         </>}
       />

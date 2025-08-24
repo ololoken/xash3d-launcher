@@ -1,9 +1,9 @@
-import {Box, ImageList, ImageListItem, ImageListItemBar, Stack, TextField } from '@mui/material';
-import { CheckOutlined } from '@ant-design/icons';
+import useYSDK from '../hooks/useYSDK';
+import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Box, Button, MobileStepper, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Module } from '../types/Module';
-import {useTranslation} from "react-i18next";
-import {Dispatch, SetStateAction, useEffect, useState} from "react";
-import useYSDK from "../hooks/useYSDK.ts";
+import { useTranslation } from 'react-i18next';
 
 export type Props = {
   instance?: Module
@@ -15,7 +15,9 @@ export type Props = {
 
 export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Props) => {
   const { t } = useTranslation();
-  const [playerModel, setPlayerModel] = useState('');
+  const [playerModel, setPlayerModel] = useState('gordon');
+  const [models, setModels] = useState<Array<string>>([]);
+  const [activeStep, setActiveStep] = useState(0);
 
   const { sdk } = useYSDK();
 
@@ -33,7 +35,13 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
       .then((name: string) => name === '' ? 'gordon' : name)
       .then(setPlayerModel);
 
+    setModels(Object.keys(instance.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).sort());
+
   }, [instance, mainRunning]);
+
+  useEffect(() => {
+    setActiveStep(models.findIndex(m => m === playerModel) ?? 0);
+  }, [playerModel, models])
 
   useEffect(() => {
     instance?.executeString(`name ${playerName}`)
@@ -51,24 +59,58 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
     return 'data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
   }
 
+  const move = (dir: number) => setActiveStep((prevActiveStep) => prevActiveStep + dir);
+
   return (!mainRunning ? <></> :
     <Stack direction="column">
-      <ImageList {...{ cols }} rowHeight={164}>
-        {Object.keys(instance?.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).sort().map((item) => (
-          <ImageListItem key={item} sx={{width: 120}} >
-            <img
-              alt={item}
-              src={getModelURL(item)}
-              onMouseDown={e => e.preventDefault()}
-            />
-            <ImageListItemBar
-              title={t(`models.${item}`)}
-              sx={{ cursor: 'pointer' }}
-              onClick={() => setPlayerModel(item)}
-              {...(playerModel === item ? { actionIcon: <Box sx={{ marginRight: 2 }}><CheckOutlined /></Box> } : {})} />
-          </ImageListItem>
-        ))}
-      </ImageList>
+      <Box sx={{ maxWidth: 400 }}>
+        <Paper
+          square
+          elevation={0}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            height: 50,
+            pl: 2,
+            bgcolor: 'background.default',
+          }}
+        >
+          <Typography>{t(`models.${models[activeStep]}`)}</Typography>
+        </Paper>
+        <Box sx={{ p: 2 }}>
+          <img
+            alt={models[activeStep]}
+            src={getModelURL(models[activeStep])}
+            onMouseDown={e => e.preventDefault()}
+            width={160}
+            height={200}
+          />
+        </Box>
+        <MobileStepper
+          variant="text"
+          steps={models.length}
+          position="static"
+          activeStep={activeStep}
+          nextButton={
+            <Button
+              onClick={() => move(1)}
+              disabled={activeStep === models.length - 1}
+              endIcon={<ArrowRightOutlined />}
+            >
+              {t('buttons.Next')}
+            </Button>
+          }
+          backButton={
+            <Button
+              onClick={() => move(-1)}
+              disabled={activeStep === 0}
+              startIcon={<ArrowLeftOutlined />}
+            >
+              {t('buttons.Back')}
+            </Button>
+          }
+        />
+      </Box>
       <TextField
         slotProps={{
           htmlInput: {

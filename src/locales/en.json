@@ -73,7 +73,9 @@
     "buttons": {
       "Play": "Play",
       "Bots": "Bots",
-      "Connect {{name}}": "Connect {{name}}"
+      "Connect {{name}}": "Connect {{name}}",
+      "Back": "Back",
+      "Next": "Next"
     },
     "bots": {
       "5": "4 noobs",
