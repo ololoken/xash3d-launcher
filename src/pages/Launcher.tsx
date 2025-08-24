@@ -134,8 +134,14 @@ export default () => {
         console.info('!+EXIT+!', code);
         // add hook or iframe callback here
       },
-      print: msg => {console.log(msg);messages.push(msg)},
-      printErr: msg => messages.push(msg)
+      print: msg => {
+        if (import.meta.env.DEV) console.log(msg);
+        messages.push(msg)
+      },
+      printErr: msg => {
+        if (import.meta.env.DEV) console.log(msg);
+        messages.push(msg)
+      }
     })
       .then(instance => {
         Object.assign(instance, {
