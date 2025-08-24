@@ -10,7 +10,9 @@
       "Add game data": "Add game data",
       "Try demo": "Try demo",
       "Toggle Settings": "Toggle Settings",
-      "Link": "Invite your friends to join the game by sharing this link."
+      "Link": "Invite your friends to join the game by sharing this link.",
+      "Volume {{vol}}": "Volume {{vol}}",
+      "Sensitivity {{sens}}": "Sensitivity {{sens}}"
     },
     "error": {
       "Internal Server Error": "Internal Server Error",

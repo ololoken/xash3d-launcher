@@ -32,7 +32,7 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
       })
       .then(setPlayerName)
       .then(() => instance.getCVar('model'))// getCVar calls must go in sequence
-      .then((name: string) => name === '' ? 'gordon' : name)
+      .then((name: string) => name || 'gordon')
       .then(setPlayerModel);
 
     setModels(Object.keys(instance.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).sort());
@@ -50,6 +50,11 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
   useEffect(() => {
     instance?.executeString(`model ${playerModel}`)
   }, [playerModel]);
+
+  useEffect(() => {
+    if (playerModel === models[activeStep]) return;
+    setPlayerModel(models[activeStep]);
+  }, [activeStep]);
 
   const getModelURL = (name: string) => {
     try {
