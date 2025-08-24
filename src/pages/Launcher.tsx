@@ -57,6 +57,8 @@ export default () => {
   const config = useConfig();
   const { sdk } = useYSDK();
 
+  const canvas = useRef<HTMLCanvasElement>(null);
+
   const [connectPayload, setConnectPayload] = useState<{ connect: string, name: string }>()
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -65,19 +67,14 @@ export default () => {
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
-  }, [sdk.environment.i18n.lang]);
-
-  useEffect(() => {
     if (!instance || !mainRunning) return;
     instance.executeString(`ui_language ${sdk.environment.i18n.lang === 'ru' ? 'russian' : 'english'}`)
   }, [sdk.environment.i18n.lang, instance, mainRunning]);
 
-  const canvas = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
-    if (!readyToRun || !instance || mainRunning) return;
-    runInstance();
-  }, [readyToRun, instance, mainRunning]);
+    if (!readyToRun || !instance) return;
+    instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2']);
+  }, [readyToRun, instance]);
 
   useEffect(() => {
     if (!sdk.environment.payload) return;
@@ -88,17 +85,24 @@ export default () => {
   }, [sdk.environment.payload]);
 
   useEffect(() => {
-    if (!instance) return;
-    const handler = () => {
+    const handle = () => {
       if (document.hidden) {
-        instance.SDL2?.audioContext.suspend();
+        instance?.SDL2?.audioContext.suspend();
       } else {
-        instance.SDL2?.audioContext.resume();
+        instance?.SDL2?.audioContext.resume();
       }
     }
-    document.addEventListener('visibilitychange', handler);
-    return () => document.removeEventListener('visibilitychange', handler);
-  }, [instance]);
+    document.addEventListener('visibilitychange', handle);
+    return () => document.removeEventListener('visibilitychange', handle);
+  }, []);
+
+  useEffect(() => {
+    const handle = () => setShowTopBar(!Boolean(document.pointerLockElement));
+    document.addEventListener('pointerlockchange', handle, false);
+    return () => {
+      document.removeEventListener('pointerlockchange', handle);
+    }
+  }, []);
 
   useEffect(() => {
     if (!hasData || !instance) return;
@@ -181,7 +185,8 @@ export default () => {
 
   useEffect(() => {
     if (!instance) return;
-    Object.assign(window,  { instance });//debug purposes
+    if (import.meta.env.DEV)
+      Object.assign(window,  { instance });//debug purposes
     instance.print(t(`Looking up data in [{{path}}]`, { path: instance.ENV.HOME }));
 
     if (!instance.FS.analyzePath(`${instance.ENV.HOME}/valve/config.cfg`).exists) {
@@ -217,36 +222,13 @@ export default () => {
 
   }, [instance])
 
-  const clearPath = (basePath: string) => {
-    if (!instance) return;
-    try {
-      Object.entries(instance.FS.lookupPath(basePath).node.contents).forEach(([path, { isFolder }]) => {
-        instance.print(`Clearing ${basePath}/${path}`)
-        isFolder
-            ? clearPath(`${basePath}/${path}`)
-            : instance.FS.unlink(`${basePath}/${path}`)
-      })
-      instance.FS.rmdir(`${basePath}`)
-    } catch (err) {
-      instance.print(`Failed to remove stored data`)
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    const handle = () => {
-      setShowTopBar(!Boolean(document.pointerLockElement));
-    }
+    const handle = () => setShowTopBar(!Boolean(document.pointerLockElement));
     document.addEventListener('pointerlockchange', handle, false);
     return () => {
       document.removeEventListener('pointerlockchange', handle);
     }
   }, []);
-
-  const runInstance = () => {
-    if (!instance || mainRunning) return;
-    instance.callMain(['-noip6', '-windowed', '-game', 'valve', '-ref', 'webgl2']);
-  }
 
   return (
     <Card
@@ -370,6 +352,7 @@ export default () => {
                           setServerRunning(true);
                         })
                         .then(() => {
+                          if (enabledBots.includes('3')) return;
                           setEnabledBots(['3', ...enabledBots]);
                           botByLevel['3'].names.forEach(name => instance?.executeString(`addbot ${botByLevel['3'].model} ${name} 3`));
                         })
