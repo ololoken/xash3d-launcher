@@ -91,6 +91,9 @@
       "3": "3 середнячка",
       "1": "2 профи"
     },
+    "texts": {
+      "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Сервер: игроки {{numcl}}/{{maxcl}}, карта: {{map}}, пинг: {{ping}}"
+    },
     "Data bundle looks ok. Continue initialization...": "Все загружено. Будем запускаться...",
     "Starting wasm module...": "Запускаем модуль wasm...",
     "Looking up data in [{{path}}]": "Поиск данных в [{{path}}]",

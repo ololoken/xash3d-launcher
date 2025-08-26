@@ -8,12 +8,12 @@ import {
   Stack,
   ToggleButton,
   Tooltip,
-  Typography,
-  tooltipClasses,
+  tooltipClasses, Typography,
 } from '@mui/material';
 
 import BackgroundImage from '../assets/images/hldm.png';
 import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
+import DownloadIndicator from './DownloadIndicator';
 import GamepadIcon from '../components/icons/GamepadIcon';
 import InviteLink from './InviteLink';
 import MapConfig from './MapConfig';
@@ -36,6 +36,7 @@ import { zipInputReader } from './dataInput';
 
 
 const messages: string[] = [];
+const pingCache = new Map<number, number>();
 
 export default () => {
   const { t } = useTranslation();
@@ -59,11 +60,12 @@ export default () => {
 
   const canvas = useRef<HTMLCanvasElement>(null);
 
-  const [connectPayload, setConnectPayload] = useState<{ connect: string, name: string }>()
+  const [connectPayload, setConnectPayload] = useState<number>()
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [showTopBar, setShowTopBar] = useState(true);
   const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
+  const [servers, setServers] = useState<Record<number, Record<string, string | number>>>({});
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
@@ -77,12 +79,23 @@ export default () => {
   }, [readyToRun, instance]);
 
   useEffect(() => {
-    if (!sdk.environment.payload) return;
-    try {
-      setConnectPayload(JSON.parse(sdk.environment.payload))
-    }
-    catch (ignore) {}
+    setConnectPayload(Number(sdk.environment.payload))
   }, [sdk.environment.payload]);
+
+  useEffect(() => {
+    if (!instance || !mainRunning || !connectPayload) return;
+    instance.executeString(`ui_queryserver ololoken.${connectPayload} current`);
+  }, [instance, connectPayload, mainRunning]);
+
+  useEffect(() => {
+    if (!instance) return;
+    const interval = setInterval(() => Object.keys(servers)
+      .forEach(identity => {
+        instance.executeString(`ui_queryserver ololoken.${identity} current`);
+        pingCache.set(Number(identity), Date.now());
+      }), 2500);
+    return () => clearInterval(interval);
+  }, [servers]);
 
   useEffect(() => {
     const handle = () => {
@@ -139,7 +152,7 @@ export default () => {
         messages.push(msg)
       },
       printErr: msg => {
-        if (import.meta.env.DEV) console.log(msg);
+        if (import.meta.env.DEV) console.error(msg);
         messages.push(msg)
       }
     })
@@ -152,6 +165,16 @@ export default () => {
               setMainRunning(true);
               instance.executeString('scr_conspeed 1048576');
               instance.executeString('con_notifytime 0');
+            },
+            serverInfo: (ip4: number, info: string) => {
+              const [, , a, b] = instance.inetNtop4(ip4).split('.', 4).map(Number);
+              const identity = (a << 0) | (b << 8);
+              const payload = info.split('\\').splice(1).reduce((r, item, idx) => {
+                const ci = Math.floor(idx/2);
+                r[ci] = [...(r[ci] ?? []), item];
+                return r;
+              }, [] as string[][]).reduce((o, [k, v]) => ({...o, [k]: v}), {})
+              setServers({ ...servers, [identity]: {...payload, ping: Date.now() - (pingCache.get(identity) ?? Date.now()) }});
             }
           },
           executeString: instance.cwrap('Cmd_ExecuteString', 'number', ['string']),
@@ -290,7 +313,7 @@ export default () => {
         m: 0,
         background: ``,
         backgroundSize: 'cover',
-        height: /*import.meta.env.PROD ? 'calc(100vh)' :*/ 'calc(100vh)',
+        height: 'calc(100vh)',
         position: 'relative',
         '&:last-child': {
           paddingBottom: 0
@@ -310,6 +333,12 @@ export default () => {
                   <Stack direction="row" spacing={2}>
                     <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={5} />
                   </Stack>
+                    {servers?.[connectPayload] && <Typography>{t("texts.Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}", {
+                      numcl: servers[connectPayload].numcl,
+                      maxcl: servers[connectPayload].maxcl,
+                      map: servers[connectPayload].map,
+                      ping: servers[connectPayload].ping
+                    })}</Typography>}
                   <Button
                     size="large"
                     variant="contained"
@@ -318,10 +347,11 @@ export default () => {
                     disabled={connecting}
                     onClick={() => {
                       setConnecting(true);
+                      setServers({});
                       instance?.executeString('host_writeconfig');
-                      instance?.preConnectToServer(connectPayload?.connect)
+                      instance?.preConnectToServer(connectPayload)
                         .then(() => {
-                          instance?.executeString(`connect o.${connectPayload?.connect}`);
+                          instance?.executeString(`connect o.${connectPayload}`);
                           return instance?.waitMessage('Setting up renderer', 60000)
                         })
                         .then(() => {
@@ -330,7 +360,7 @@ export default () => {
                         })
                         .finally(() => setConnecting(false));
                     }}
-                  >{t('buttons.Connect {{name}}', { name: connectPayload.name })}</Button>
+                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</Button>
                 </Stack>
               : <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
                   <Stack direction="row" spacing={2}>
@@ -345,6 +375,7 @@ export default () => {
                     disabled={serverStarting}
                     onClick={() => {
                       setServerStarting(true)
+                      setServers({});
                       enabledBots.flatMap(skill => botByLevel[skill].names)
                         .forEach(name => instance?.executeString(`kick "${name}"`));
                       instance?.executeString('host_writeconfig');
@@ -379,35 +410,7 @@ export default () => {
           background: mainRunning ? '#000' : 'transparent'
         }}></canvas>
       </CardContent>
-      {downloadProgress ? <Box sx={{ position: 'absolute', display: 'inline-flex', zIndex: 120, top: 'calc(100vh / 2 - 100px)', left: 'calc(100vw / 2 - 100px)' }}>
-        <CircularProgress variant="indeterminate" value={downloadProgress} size={200} />
-        <Box
-          sx={{
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0,
-            position: 'absolute',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography
-            variant="caption"
-            fontSize={40}
-            fontWeight={'bold'}
-            component="div"
-            sx={{ color: 'text.primary' }}
-          >{`${Math.round(downloadProgress)}%`}</Typography>
-          <Typography
-            variant="subtitle1"
-            component="div"
-            sx={{ color: 'text.primary' }}
-          >{Math.round(downloadProgress) === 100 ? 'Unpacking' : 'Downloading'}</Typography>
-        </Box>
-      </Box> : ''}
+      <DownloadIndicator {...{ downloadProgress }} />
     </Card>
   )
 }

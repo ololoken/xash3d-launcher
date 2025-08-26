@@ -94,7 +94,8 @@ export type Module = {
 
   net: any;
 
-  inetNtop4: (addr: string) => number
+  inetNtop4: (addr: number) => string
+  inetPton4: (addr: string) => number
   readSockaddr: (sa: number, salen: number) => SockAddr
   writeSockaddr: (sa: number, family: number, addr: string, port: number, addrlen?: number) => number
 

@@ -44,7 +44,8 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
   }, [playerModel, models])
 
   useEffect(() => {
-    instance?.executeString(`name ${playerName}`)
+    instance?.executeString(`name "${playerName}"`)
+    instance?.executeString(`hostname "${playerName}"`)
   }, [playerName]);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
             bgcolor: 'background.default',
           }}
         >
-          <Typography>{t(`models.${models[activeStep]}`)}</Typography>
+          <Typography>{models[activeStep] ? t(`models.${models[activeStep]}`) : ''}</Typography>
         </Paper>
         <Box sx={{ p: 2 }}>
           <img

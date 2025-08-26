@@ -15,10 +15,7 @@ export default ({ instance, playerName }: Props) => {
   const { sdk } = useYSDK();
 
   const serverUrl = ((url) => {
-    url.searchParams.append('payload', JSON.stringify({
-      connect: instance?.net?.getHostId(),
-      name: playerName
-    }))
+    url.searchParams.append('payload', instance?.net?.getHostId())
     return url;
   })(new URL(import.meta.env.PROD ? 'https://yandex.ru/games/app/460673' : String(location)));
 

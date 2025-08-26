@@ -72,13 +72,13 @@ export default (h: Module) => {
     h.writeSockaddr(sa, 2, saddr, port);
 
     ai = h._malloc(32);
-    h.HEAP32[((ai+4)>>2)] = 2;
-    h.HEAP32[((ai+8)>>2)] = 2;
-    h.HEAP32[((ai+12)>>2)] = 17;
-    h.HEAPU32[((ai+24)>>2)] = 0;
-    h.HEAPU32[((ai+20)>>2)] = sa;
-    h.HEAP32[((ai+16)>>2)] = 16;
-    h.HEAP32[((ai+28)>>2)] = 0;
+    h.HEAP32[(ai+4)>>2] = 2;
+    h.HEAP32[(ai+8)>>2] = 2;
+    h.HEAP32[(ai+12)>>2] = 17;
+    h.HEAPU32[(ai+24)>>2] = 0;
+    h.HEAPU32[(ai+20)>>2] = sa;
+    h.HEAP32[(ai+16)>>2] = 16;
+    h.HEAP32[(ai+28)>>2] = 0;
 
     return ai;
   }
@@ -113,7 +113,7 @@ export default (h: Module) => {
 
       if (addr.addr === '255.255.255.255') return data.length; // ignore broadcast packets
 
-      const [, , a, b] = addr.addr.split('.').map(Number)
+      const [, , a, b] = addr.addr.split('.', 4).map(Number)
       const remoteId = (a << 0) | (b << 8);
 
       const key = `${hostId}:${remoteId}`;
@@ -180,7 +180,9 @@ export default (h: Module) => {
       const id = Number(identity);
       h.HEAPU32[((addrinfoPtr)>>2)] = allocaddrinfo(`101.101.${(id >> 0) & 0xff}.${(id >> 8) & 0xff}`, 0);
       return 0;
-    }
+    },
+
+    master
   }
 
   return new Promise<void>((resolve, reject) => {

@@ -88,6 +88,9 @@
       "5": "4 noobs",
       "3": "3 averages",
       "1": "2 cyborgs"
+    },
+    "texts": {
+      "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}"
     }
   }
 }
