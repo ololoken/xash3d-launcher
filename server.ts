@@ -1,30 +1,21 @@
 import { WebSocketServer, RawData, WebSocket } from 'ws';
 
-type ServerEntry = { id: number, name: string }
-
 export type Payload =
     { 'init': { id: number } }
   | { 'pc:ice-candidate': { candidate: RTCIceCandidateInit, from: number, to: number } }
   | { 'pc:offer': { description: RTCSessionDescription, from: number, to: number } }
   | { 'pc:answer': { description: RTCSessionDescription, from: number, to: number } }
-  | { 'public': { name: string, status: boolean } }
+  | { 'public': { status: boolean } }
   | { 'list': '' }
-  | { 'sv:list': { servers: ServerEntry[] } }
+  | { 'sv:list': number[] }
 
 const instances = new Map<number, WebSocket>;
-const publicInstances = new Map<number, string>;
+const publicInstances = new Set<number>;
 
 const wss = new WebSocketServer({ port: 4990 });
 
-const sendPublicInstances = () => {
-  const servers: ServerEntry[] = [];
-  for (const [id, name] of publicInstances[Symbol.iterator]()) {
-    servers.push({ id, name })
-  }
-  instances.forEach(socket => {
-    socket.send(JSON.stringify({ 'sv:list': { servers } }));
-  })
-}
+const sendPublicInstances = () =>
+  instances.forEach(socket => socket.send(JSON.stringify({ 'sv:list': Array.from(publicInstances) })));
 
 wss.on('connection', (ws, req) => {
 
@@ -69,12 +60,11 @@ wss.on('connection', (ws, req) => {
         } break;
         case 'public' in payload: {// mark instance as public
           if (payload['public'].status) {
-            publicInstances.set(id, payload['public'].name);
+            publicInstances.add(id);
           }
           else {
             publicInstances.delete(id);
           }
-          sendPublicInstances();
         } break;
         case 'list' in payload: {
           sendPublicInstances();
@@ -93,6 +83,4 @@ wss.on('connection', (ws, req) => {
   });
 
   ws.send(JSON.stringify({ init: { id } }));
-  sendPublicInstances();
-
 });

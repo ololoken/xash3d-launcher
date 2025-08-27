@@ -1,11 +1,10 @@
 import {
   Box,
-  Button,
   Card,
   CardContent,
   CardHeader,
   CircularProgress,
-  Stack,
+  Stack, Switch,
   ToggleButton,
   Tooltip,
   tooltipClasses, Typography,
@@ -25,6 +24,7 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
+import { LoadingButton } from '@mui/lab';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
 import { SettingTwoTone } from '@ant-design/icons';
@@ -33,7 +33,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation} from 'react-i18next';
 import { zipInputReader } from './dataInput';
-
 
 const messages: string[] = [];
 const pingCache = new Map<number, number>();
@@ -64,6 +63,7 @@ export default () => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [showTopBar, setShowTopBar] = useState(true);
+  const [withBots, setWithBots] = useState(true);
   const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
   const [servers, setServers] = useState<Record<number, Record<string, string | number>>>({});
 
@@ -339,12 +339,14 @@ export default () => {
                       map: servers[connectPayload].map,
                       ping: servers[connectPayload].ping
                     })}</Typography>}
-                  <Button
+                  <LoadingButton
                     size="large"
                     variant="contained"
                     startIcon={<GamepadIcon />}
                     sx={{ minWidth: '50%' }}
-                    disabled={connecting}
+                    loading={!Boolean(servers?.[connectPayload]) || connecting}
+                    loadingIndicator={<CircularProgress />}
+                    disabled={!Boolean(servers?.[connectPayload]) || connecting}
                     onClick={() => {
                       setConnecting(true);
                       setServers({});
@@ -360,18 +362,24 @@ export default () => {
                         })
                         .finally(() => setConnecting(false));
                     }}
-                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</Button>
+                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</LoadingButton>
                 </Stack>
               : <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
                   <Stack direction="row" spacing={2}>
                     <MapConfig instance={instance} selectedMap={selectedMap} setSelectedMap={setSelectedMap} />
                     <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={4} />
                   </Stack>
-                  <Button
+                  <Stack direction="row" spacing={2}>
+                    <Typography>{t('texts.Add bots')} <Switch checked={withBots} onChange={(ignore, checked) => setWithBots(checked)} /></Typography>
+                    <Typography>{t('texts.Public server')} <Switch /></Typography>
+                  </Stack>
+                  <LoadingButton
                     size="large"
                     variant="contained"
                     startIcon={<GamepadIcon />}
                     sx={{ minWidth: '50%' }}
+                    loading={serverStarting}
+                    loadingIndicator={<CircularProgress />}
                     disabled={serverStarting}
                     onClick={() => {
                       setServerStarting(true)
@@ -389,7 +397,7 @@ export default () => {
                           setServerRunning(true);
                         })
                         .then(() => {
-                          if (enabledBots.includes('3')) return;
+                          if (enabledBots.includes('3') || !withBots) return;
                           setEnabledBots(['3', ...enabledBots]);
                           botByLevel['3'].names.forEach(name => instance?.executeString(`addbot ${botByLevel['3'].model} ${name} 3`));
                         })
@@ -399,7 +407,7 @@ export default () => {
                           message: t('snackbar.Hit `Esc` to open top bar menu and remove/add bots.')
                         }));
                     }}
-                  >{t('buttons.Play')}</Button>
+                  >{t('buttons.Play')}</LoadingButton>
                 </Stack>
             }
           </Box>

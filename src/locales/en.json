@@ -90,7 +90,9 @@
       "1": "2 cyborgs"
     },
     "texts": {
-      "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}"
+      "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}",
+      "Add bots": "Add bots",
+      "Public server": "Public server"
     }
   }
 }
