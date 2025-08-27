@@ -1,5 +1,5 @@
 import {
-  Box,
+  Box, Button,
   Card,
   CardContent,
   CardHeader,
@@ -24,7 +24,6 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
-import { LoadingButton } from '@mui/lab';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
 import { SettingTwoTone } from '@ant-design/icons';
@@ -339,7 +338,7 @@ export default () => {
                       map: servers[connectPayload].map,
                       ping: servers[connectPayload].ping
                     })}</Typography>}
-                  <LoadingButton
+                  <Button
                     size="large"
                     variant="contained"
                     startIcon={<GamepadIcon />}
@@ -362,7 +361,7 @@ export default () => {
                         })
                         .finally(() => setConnecting(false));
                     }}
-                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</LoadingButton>
+                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</Button>
                 </Stack>
               : <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
                   <Stack direction="row" spacing={2}>
@@ -373,7 +372,7 @@ export default () => {
                     <Typography>{t('texts.Add bots')} <Switch checked={withBots} onChange={(ignore, checked) => setWithBots(checked)} /></Typography>
                     <Typography>{t('texts.Public server')} <Switch /></Typography>
                   </Stack>
-                  <LoadingButton
+                  <Button
                     size="large"
                     variant="contained"
                     startIcon={<GamepadIcon />}
@@ -407,7 +406,7 @@ export default () => {
                           message: t('snackbar.Hit `Esc` to open top bar menu and remove/add bots.')
                         }));
                     }}
-                  >{t('buttons.Play')}</LoadingButton>
+                  >{t('buttons.Play')}</Button>
                 </Stack>
             }
           </Box>
