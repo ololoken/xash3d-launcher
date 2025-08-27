@@ -1,23 +1,23 @@
 import useYSDK from '../hooks/useYSDK';
 import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { Box, Button, MobileStepper, Paper, Stack, TextField, Typography } from '@mui/material';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Module } from '../types/Module';
+import { dispatch, useSelector } from '../store';
 import { useTranslation } from 'react-i18next';
+import { model, name } from '../store/reducers/game';
 
 export type Props = {
   instance?: Module
   mainRunning: boolean
-  playerName: string
-  setPlayerName: Dispatch<SetStateAction<string>>
-  cols: number
 }
 
-export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Props) => {
+export default ({ instance, mainRunning }: Props) => {
   const { t } = useTranslation();
-  const [playerModel, setPlayerModel] = useState('gordon');
+
   const [models, setModels] = useState<Array<string>>([]);
   const [activeStep, setActiveStep] = useState(0);
+  const { playerModel, playerName } = useSelector(state => state.game);
 
   const { sdk } = useYSDK();
 
@@ -30,10 +30,9 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
         }
         return name
       })
-      .then(setPlayerName)
+      .then((playerName: string) => dispatch(name(playerName)))
       .then(() => instance.getCVar('model'))// getCVar calls must go in sequence
-      .then((name: string) => name || 'gordon')
-      .then(setPlayerModel);
+      .then((playerModel: string) => dispatch(model(playerModel || 'gordon')));
 
     setModels(Object.keys(instance.FS.analyzePath(`${instance?.ENV.HOME}/rodir/valve/models/player`)?.object?.contents ?? {}).sort());
 
@@ -54,7 +53,7 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
 
   useEffect(() => {
     if (playerModel === models[activeStep]) return;
-    setPlayerModel(models[activeStep]);
+    dispatch(model(models[activeStep]))
   }, [activeStep]);
 
   const getModelURL = (name: string) => {
@@ -126,7 +125,7 @@ export default ({ instance, mainRunning, playerName, setPlayerName, cols }: Prop
           }
         }}
         value={playerName}
-        onChange={e => setPlayerName(e.target.value)}
+        onChange={e => dispatch(name(e.target.value))}
         label={t('input.Player name')} variant="standard" />
     </Stack>
   )

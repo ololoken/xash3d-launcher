@@ -65,6 +65,7 @@ wss.on('connection', (ws, req) => {
           else {
             publicInstances.delete(id);
           }
+          sendPublicInstances();
         } break;
         case 'list' in payload: {
           sendPublicInstances();

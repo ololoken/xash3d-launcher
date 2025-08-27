@@ -4,19 +4,20 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
-  Stack, Switch,
+  Stack, Switch, Tab,
   ToggleButton,
   Tooltip,
   tooltipClasses, Typography,
 } from '@mui/material';
 
 import BackgroundImage from '../assets/images/hldm.png';
-import BotsMenu, {botByLevel, BotSkill} from './BotsMenu';
+import BotsMenu, { botByLevel } from './BotsMenu';
 import DownloadIndicator from './DownloadIndicator';
 import GamepadIcon from '../components/icons/GamepadIcon';
 import InviteLink from './InviteLink';
 import MapConfig from './MapConfig';
 import PlayerConfig from './PlayerConfig';
+import ServersList from './ServersList';
 import VolumeAndSensitivitySliders from './VolumeAndSensitivitySliders';
 import configCfg from '../assets/module/config.cfg';
 import gameData from '../assets/module/data.zip?url';
@@ -27,6 +28,9 @@ import useYSDK from '../hooks/useYSDK';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
 import { SettingTwoTone } from '@ant-design/icons';
+import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { bots, publicServers, addServer, removeServer, flow } from '../store/reducers/game';
+import { dispatch, useSelector } from '../store';
 import { snackbar } from '../common/snackbar';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
@@ -34,24 +38,27 @@ import { useTranslation} from 'react-i18next';
 import { zipInputReader } from './dataInput';
 
 const messages: string[] = [];
-const pingCache = new Map<number, number>();
+const pingCache = new Map<number, { start: number, timeout: number }>();
 
 export default () => {
   const { t } = useTranslation();
   const theme = useTheme();
 
+  const {
+    enabledBots,
+    selectedMap,
+    servers,
+    showSettings,
+    connected, connecting,
+    serverRunning, serverStarting
+  } = useSelector(state => state.game);
+
   const [instance, setInstance] = useState<Module>();
   const [readyToRun, setReadyToRun] = useState(false);
   const [mainRunning, setMainRunning] = useState(false);
-  const [serverRunning, setServerRunning] = useState(false);
-  const [serverStarting, setServerStarting] = useState(false);
   const [hasData, setHasData] = useState(false);
 
-  const [showSettings, setShowSettings] = useState(true)
   const [downloadProgress, setDownloadProgress] = useState(0);
-
-  const [selectedMap, setSelectedMap] = useState('crossfire.bsp');
-  const [playerName, setPlayerName] = useState('');
 
   const config = useConfig();
   const { sdk } = useYSDK();
@@ -59,12 +66,10 @@ export default () => {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   const [connectPayload, setConnectPayload] = useState<number>()
-  const [connecting, setConnecting] = useState(false);
-  const [connected, setConnected] = useState(false);
   const [showTopBar, setShowTopBar] = useState(true);
   const [withBots, setWithBots] = useState(true);
-  const [enabledBots, setEnabledBots] = useState<BotSkill[]>([]);
-  const [servers, setServers] = useState<Record<number, Record<string, string | number>>>({});
+  const [isPublicServer, setIsPublicServer] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(1);
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
@@ -88,12 +93,12 @@ export default () => {
 
   useEffect(() => {
     if (!instance) return;
-    const interval = setInterval(() => Object.keys(servers)
+    const refreshTimeout = setTimeout(() => Object.keys(servers)
       .forEach(identity => {
         instance.executeString(`ui_queryserver ololoken.${identity} current`);
-        pingCache.set(Number(identity), Date.now());
-      }), 2500);
-    return () => clearInterval(interval);
+        pingCache.set(Number(identity), { start: Date.now(), timeout: Number(setTimeout(() => dispatch(removeServer(identity)), 5000)) } );
+      }), 5000);
+    return () => clearTimeout(refreshTimeout)
   }, [servers]);
 
   useEffect(() => {
@@ -128,6 +133,10 @@ export default () => {
     })
 
   }, [hasData, instance]);
+
+  useEffect(() => {
+    instance?.net.master.send(JSON.stringify({ public: { status: isPublicServer } }))
+  }, [isPublicServer]);
 
   useEffect(function critical () {//init wasm module instance
     if (!canvas.current) return;
@@ -173,7 +182,8 @@ export default () => {
                 r[ci] = [...(r[ci] ?? []), item];
                 return r;
               }, [] as string[][]).reduce((o, [k, v]) => ({...o, [k]: v}), {})
-              setServers({ ...servers, [identity]: {...payload, ping: Date.now() - (pingCache.get(identity) ?? Date.now()) }});
+              dispatch(addServer({ [identity]: {...payload, ping: Date.now() - (pingCache.get(identity)?.start ?? Date.now()) }}))
+              clearTimeout(pingCache.get(identity)?.timeout);
             }
           },
           executeString: instance.cwrap('Cmd_ExecuteString', 'number', ['string']),
@@ -287,10 +297,10 @@ export default () => {
         action={<>
           <Stack direction={"row"} spacing={2}>
             {(!connectPayload && instance?.net?.getHostId())
-              ? <InviteLink {...{ instance, playerName }} />
+              ? <InviteLink {...{ instance }} />
               : <Box flex={1}
               />}
-            {serverRunning && <BotsMenu {...{instance, setEnabledBots, enabledBots, serverRunning}} />}
+            {serverRunning && <BotsMenu {...{instance, serverRunning}} />}
             <VolumeAndSensitivitySliders {...{mainRunning, instance}} />
             {readyToRun
               ? <Tooltip title={t('menu.Toggle Settings')} slotProps={{ popper: { sx: {
@@ -298,7 +308,7 @@ export default () => {
                   } }}}>
                   <ToggleButton value={-1} selected={showSettings} sx={{ p: '3px 6px', height: '36px' }} onClick={() => {
                     if (!serverRunning && !connected) return;
-                    setShowSettings(!showSettings)
+                    dispatch(flow({ showSettings: !showSettings }))
                   }}>
                     <SettingTwoTone style={{ fontSize: '2.4em' }} />
                   </ToggleButton>
@@ -326,11 +336,11 @@ export default () => {
           position: 'absolute',
           zIndex: 1000
         }}>
-          <Box sx={{ width: '100%', top: 44, position: 'relative' }}>
+          <Box sx={{ width: '100%', top: 44, position: 'relative', maxWidth: '90%', margin: '0 auto' }}>
             {connectPayload
               ? <Stack direction="column" spacing={2} alignItems="center">
                   <Stack direction="row" spacing={2}>
-                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={5} />
+                    <PlayerConfig instance={instance} mainRunning={mainRunning} />
                   </Stack>
                     {servers?.[connectPayload] && <Typography>{t("texts.Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}", {
                       numcl: servers[connectPayload].numcl,
@@ -347,8 +357,8 @@ export default () => {
                     loadingIndicator={<CircularProgress />}
                     disabled={!Boolean(servers?.[connectPayload]) || connecting}
                     onClick={() => {
-                      setConnecting(true);
-                      setServers({});
+                      dispatch(flow({ connecting: true }));
+                      dispatch(publicServers({}));
                       instance?.executeString('host_writeconfig');
                       instance?.preConnectToServer(connectPayload)
                         .then(() => {
@@ -356,58 +366,79 @@ export default () => {
                           return instance?.waitMessage('Setting up renderer', 60000)
                         })
                         .then(() => {
-                          setShowSettings(false);
-                          setConnected(true)
+                          dispatch(flow({ connected: true, showSettings: false }));
                         })
-                        .finally(() => setConnecting(false));
+                        .finally(() => dispatch(flow({ connecting: false })));
                     }}
-                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/---' })}</Button>
+                  >{t('buttons.Connect {{name}}', { name: servers?.[connectPayload]?.host ?? '--/--' })}</Button>
+                <Button
+                  variant="text"
+                  onClick={() => setConnectPayload(undefined)}
+                >{t('buttons.Run own server')}</Button>
                 </Stack>
-              : <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
-                  <Stack direction="row" spacing={2}>
-                    <MapConfig instance={instance} selectedMap={selectedMap} setSelectedMap={setSelectedMap} />
-                    <PlayerConfig instance={instance} playerName={playerName} setPlayerName={setPlayerName} mainRunning={mainRunning} cols={4} />
-                  </Stack>
-                  <Stack direction="row" spacing={2}>
-                    <Typography>{t('texts.Add bots')} <Switch checked={withBots} onChange={(ignore, checked) => setWithBots(checked)} /></Typography>
-                    <Typography>{t('texts.Public server')} <Switch /></Typography>
-                  </Stack>
-                  <Button
-                    size="large"
-                    variant="contained"
-                    startIcon={<GamepadIcon />}
-                    sx={{ minWidth: '50%' }}
-                    loading={serverStarting}
-                    loadingIndicator={<CircularProgress />}
-                    disabled={serverStarting}
-                    onClick={() => {
-                      setServerStarting(true)
-                      setServers({});
-                      enabledBots.flatMap(skill => botByLevel[skill].names)
-                        .forEach(name => instance?.executeString(`kick "${name}"`));
-                      instance?.executeString('host_writeconfig');
-                      instance?.executeString('deathmatch 1');
-                      instance?.executeString('maxplayers 16');
-                      instance?.executeString(`map ${selectedMap}`);
-                      instance?.waitMessage('Setting up renderer', 60000)
-                        .then(() => {
-                          setShowSettings(false);
-                          setServerStarting(false);
-                          setServerRunning(true);
-                        })
-                        .then(() => {
-                          if (enabledBots.includes('3') || !withBots) return;
-                          setEnabledBots(['3', ...enabledBots]);
-                          botByLevel['3'].names.forEach(name => instance?.executeString(`addbot ${botByLevel['3'].model} ${name} 3`));
-                        })
-                        .finally(() => snackbar({
-                          open: true, close: false,
-                          variant: 'alert',
-                          message: t('snackbar.Hit `Esc` to open top bar menu and remove/add bots.')
-                        }));
-                    }}
-                  >{t('buttons.Play')}</Button>
-                </Stack>
+              : <TabContext value={selectedTab}>
+                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <TabList onChange={(ignore, tab) => setSelectedTab(tab)}>
+                      <Tab label={t('tabs.Connect To Server')} value={0} />
+                      <Tab label={t('tabs.Create Server')} value={1} />
+                    </TabList>
+                  </Box>
+                  <TabPanel value={0}>
+                    <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
+                      <ServersList instance={instance} />
+                    </Stack>
+                  </TabPanel>
+                  <TabPanel value={1}>
+                    <Stack direction="column" spacing={2} alignItems="center" sx={{ overflow: 'hidden' }}>
+                      <Stack direction="row" spacing={2}>
+                        <MapConfig instance={instance} />
+                        <PlayerConfig instance={instance} mainRunning={mainRunning} />
+                      </Stack>
+                      <Stack direction="row" spacing={2}>
+                        <Typography>{t('texts.Add bots')} <Switch
+                          checked={withBots}
+                          onChange={(ignore, checked) => setWithBots(checked)}
+                        /></Typography>
+                        <Typography>{t('texts.Public server')} <Switch
+                          checked={isPublicServer}
+                          disabled={instance?.net.master.readyState !== WebSocket.OPEN}
+                          onChange={(ignore, status) => setIsPublicServer(status)}
+                        /></Typography>
+                      </Stack>
+                      <Button
+                        size="large"
+                        variant="contained"
+                        startIcon={<GamepadIcon />}
+                        sx={{ minWidth: '50%' }}
+                        loading={serverStarting}
+                        loadingIndicator={<CircularProgress />}
+                        disabled={serverStarting}
+                        onClick={() => {
+                          dispatch(flow({ serverStarting: true }));
+                          dispatch(publicServers({}));
+                          enabledBots.flatMap(skill => botByLevel[skill].names)
+                            .forEach(name => instance?.executeString(`kick "${name}"`));
+                          instance?.executeString('host_writeconfig');
+                          instance?.executeString('deathmatch 1');
+                          instance?.executeString('maxplayers 16');
+                          instance?.executeString(`map ${selectedMap}`);
+                          instance?.waitMessage('Setting up renderer', 60000)
+                            .then(() => dispatch(flow({ showSettings: false, serverStarting: false, serverRunning: true })))
+                            .then(() => {
+                              if (enabledBots.includes('3') || !withBots) return;
+                              dispatch(bots(['3', ...enabledBots]));
+                              botByLevel['3'].names.forEach(name => instance?.executeString(`addbot ${botByLevel['3'].model} ${name} 3`));
+                            })
+                            .finally(() => snackbar({
+                              open: true, close: false,
+                              variant: 'alert',
+                              message: t('snackbar.Hit `Esc` to open top bar menu and remove/add bots.')
+                            }));
+                        }}
+                      >{t('buttons.Play')}</Button>
+                    </Stack>
+                  </TabPanel>
+                </TabContext>
             }
           </Box>
         </Box>

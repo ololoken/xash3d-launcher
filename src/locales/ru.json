@@ -80,7 +80,8 @@
       "Connect {{name}}": "Подключиться к {{name}}",
       "Back": "Туда",
       "Next": "Сюда",
-      "Copy": "Скопировать"
+      "Copy": "Скопировать",
+      "Run own server": "Запустить свой сервер"
     },
     "snackbar": {
       "Link Copied": "Ссылка скопирована",
@@ -95,6 +96,16 @@
       "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Сервер: игроки {{numcl}}/{{maxcl}}, карта: {{map}}, пинг: {{ping}}",
       "Add bots": "Добавить ботов",
       "Public server": "Публичный сервер"
+    },
+    "tabs": {
+      "Connect To Server": "Подключиться",
+      "Create Server": "Свой сервер"
+    },
+    "srv": {
+      "Name": "Название",
+      "Map": "Карта",
+      "Players": "Игроки",
+      "Ping": "Пинг"
     },
     "Data bundle looks ok. Continue initialization...": "Все загружено. Будем запускаться...",
     "Starting wasm module...": "Запускаем модуль wasm...",

@@ -1,13 +1,13 @@
 import BotIcon from '../components/icons/BotIcon';
-import {Button, IconButton, Menu, MenuItem, Switch} from '@mui/material';
+import { Button, Menu, MenuItem, Switch}  from '@mui/material';
 import { Module } from '../types/Module';
-import {Dispatch, SetStateAction, useState} from 'react';
+import { bots } from '../store/reducers/game';
+import { dispatch, useSelector } from '../store';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type Props = {
   instance?: Module
-  enabledBots: BotSkill[]
-  setEnabledBots: Dispatch<SetStateAction<BotSkill[]>>
 }
 
 export const botByLevel = {
@@ -27,7 +27,7 @@ export const botByLevel = {
 
 export type BotSkill = (keyof typeof botByLevel);
 
-export default ({ instance, setEnabledBots, enabledBots }: Props) => {
+export default ({ instance }: Props) => {
   const { t } = useTranslation();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -38,6 +38,8 @@ export default ({ instance, setEnabledBots, enabledBots }: Props) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const { enabledBots } = useSelector(state => state.game);
 
   return (<>
     <Button
@@ -60,11 +62,11 @@ export default ({ instance, setEnabledBots, enabledBots }: Props) => {
       {Object.entries(botByLevel).map(([skill, { names, model }]) =>
         <MenuItem key={skill}>{t(`bots.${skill}`)} <Switch checked={enabledBots.includes(skill as BotSkill)} onChange={(e, checked) => {
           if (checked) {
-            setEnabledBots([skill as BotSkill, ...enabledBots]);
+            dispatch(bots([skill as BotSkill, ...enabledBots]));
             names.forEach(name => instance?.executeString(`addbot ${model} ${name} ${skill}`));
           }
           else {
-            setEnabledBots(enabledBots.filter(bn => bn !== skill));
+            dispatch(bots(enabledBots.filter(bn => bn !== skill)))
             names.forEach(name => instance?.executeString(`kick "${name}"`));
           }
         }} /></MenuItem>)}

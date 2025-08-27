@@ -10,20 +10,21 @@ import {
   Typography
 } from '@mui/material';
 import { Module} from '../types/Module';
+import { dispatch, useSelector } from '../store';
+import { map } from '../store/reducers/game';
 import { useTranslation} from 'react-i18next';
-import { Dispatch, SetStateAction} from 'react';
 
 const mapImagesPrefix = '../assets/images/maps';
 const mapImages = import.meta.glob(`../assets/images/maps/*.webp`, { eager: true, as: 'url' });
 
 export type Props = {
   instance?: Module
-  selectedMap: string
-  setSelectedMap: Dispatch<SetStateAction<string>>
 }
 
-export default ({ instance, setSelectedMap, selectedMap }: Props) => {
+export default ({ instance }: Props) => {
   const { t } = useTranslation();
+
+  const { selectedMap } = useSelector(state => state.game);
 
   return (
     <Stack direction="row">
@@ -33,7 +34,7 @@ export default ({ instance, setSelectedMap, selectedMap }: Props) => {
             key={name}
             dense
             selected={selectedMap === name}
-            onClick={() => setSelectedMap(name)
+            onClick={() => dispatch(map(name))
           }>
             <ListItemText secondary={t(`maps.name.${name}`)} />
           </ListItemButton>

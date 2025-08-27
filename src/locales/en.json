@@ -78,7 +78,8 @@
       "Connect {{name}}": "Connect {{name}}",
       "Back": "Back",
       "Next": "Next",
-      "Copy": "Copy"
+      "Copy": "Copy",
+      "Run own server": "Run own server"
     },
     "snackbar": {
       "Link Copied": "Link Copied",
@@ -93,6 +94,16 @@
       "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}": "Server info: players {{numcl}}/{{maxcl}}, map: {{map}}, ping: {{ping}}",
       "Add bots": "Add bots",
       "Public server": "Public server"
+    },
+    "tabs": {
+      "Connect To Server": "Connect To Server",
+      "Create Server": "Create Server"
+    },
+    "srv": {
+      "Name": "Name",
+      "Map": "Map",
+      "Players": "Players",
+      "Ping": "Ping"
     }
   }
 }
