@@ -102,16 +102,17 @@ export default () => {
   }, [servers]);
 
   useEffect(() => {
+    if (!instance) return;
     const handle = () => {
       if (document.hidden) {
-        instance?.SDL2?.audioContext.suspend();
+        instance.SDL2.audioContext.suspend();
       } else {
-        instance?.SDL2?.audioContext.resume();
+        instance.SDL2.audioContext.resume();
       }
     }
     document.addEventListener('visibilitychange', handle);
     return () => document.removeEventListener('visibilitychange', handle);
-  }, []);
+  }, [instance]);
 
   useEffect(() => {
     const handle = () => setShowTopBar(!Boolean(document.pointerLockElement));
@@ -296,7 +297,7 @@ export default () => {
         onMouseUp={e => e.stopPropagation()}
         action={<>
           <Stack direction={"row"} spacing={2}>
-            {(!connectPayload && instance?.net?.getHostId())
+            {(!connectPayload && serverRunning && instance?.net?.getHostId())
               ? <InviteLink {...{ instance }} />
               : <Box flex={1}
               />}
