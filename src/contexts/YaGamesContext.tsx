@@ -31,7 +31,9 @@ export const YaGamesProvider = ({ children }: Props) => {
             i18n: { lang: 'ru' },
             payload: (new URL(String(location))).searchParams.get('payload')
           },
-          getFlags: async () => ({ SHOW_EXTRA_OPTIONS: 'OFF' }),
+          getFlags: async () => ({
+            FAKE_YANDEX: true
+          }),
           features: {
             LoadingAPI: {
               ready: () => console.log('ya ready')

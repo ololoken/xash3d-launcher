@@ -4,6 +4,7 @@ import { CopyOutlined, LinkOutlined } from '@ant-design/icons';
 import { Module } from '../types/Module';
 import { snackbar } from '../common/snackbar';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 
 export type Props = {
   instance?: Module
@@ -12,14 +13,28 @@ export type Props = {
 export default ({ instance }: Props) => {
   const { t } = useTranslation();
   const { sdk } = useYSDK();
+  const [serverUrl, setServerUrl] = useState<URL>();
 
-  const serverUrl = ((url) => {
-    url.searchParams.delete('payload')
-    url.searchParams.append('payload', instance?.net?.getHostId())
-    return url;
-  })(new URL(import.meta.env.PROD ? 'https://yandex.ru/games/app/460673' : `${location.host}`));
+  useEffect(() => {
+    if (!instance) return;
+    (async () => {
+      const fake = (await sdk.getFlags())?.FAKE_YANDEX;
+      setServerUrl(((url) => {
+        url.searchParams.delete('payload')
+        url.searchParams.append('payload', instance?.net?.getHostId())
+        return url;
+      })(new URL(import.meta.env.PROD && fake
+        ? 'https://turch.in/dm/index.html'
+        : ( import.meta.env.PROD
+            ? 'https://yandex.ru/games/app/460673'
+            : `${location.host}`
+          )
+      )));
+    })()
+  }, [instance]);
 
-  return (<>
+
+  return (serverUrl ? <>
     <Tooltip title={t('menu.Link')} slotProps={{ popper: { sx: {
           [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: { color: '#000', fontSize: '1em' }
         } }}}>
@@ -49,5 +64,5 @@ export default ({ instance }: Props) => {
         fullWidth
       />
     </Tooltip>
-  </>)
+  </> : '')
 }
