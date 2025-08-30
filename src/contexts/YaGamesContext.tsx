@@ -24,12 +24,13 @@ export const YaGamesProvider = ({ children }: Props) => {
       });
     }
     catch (e) {
+      const loc = new URL(String(location));
       setState({
         sdk: {
           dispatchEvent: (eventName: SdkEventName, detail?: any) => Promise.resolve(),
           environment: {
-            i18n: { lang: 'ru' },
-            payload: (new URL(String(location))).searchParams.get('payload')
+            i18n: { lang: loc.searchParams.get('lang') === 'ru' ? 'ru' : 'en' },
+            payload: loc.searchParams.get('payload')
           },
           getFlags: async () => ({
             FAKE_YANDEX: true

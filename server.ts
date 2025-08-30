@@ -85,3 +85,13 @@ wss.on('connection', (ws, req) => {
 
   ws.send(JSON.stringify({ init: { id } }));
 });
+
+process.on('uncaughtException', error  => {
+  console.log('Fatal:',  error);
+  process.exit(1);
+})
+
+process.on('unhandledRejection', (error, promise) => {
+  console.log('Promise rejection: ', promise);
+  console.log('Error: ', error );
+});
