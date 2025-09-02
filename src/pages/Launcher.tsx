@@ -25,6 +25,7 @@ import throwExpression from '../common/throwExpression';
 import useConfig from '../hooks/useConfig';
 import useYSDK from '../hooks/useYSDK';
 
+import { CircularBuffer } from '../common/CircularBuffer';
 import { Module } from '../types/Module';
 import { ModuleInstance } from '../assets/module/module';
 import { SettingTwoTone } from '@ant-design/icons';
@@ -37,7 +38,7 @@ import { useTheme } from '@mui/material/styles';
 import { useTranslation} from 'react-i18next';
 import { zipInputReader } from './dataInput';
 
-const messages: string[] = [];
+const messages = new CircularBuffer<string>(100);
 const pingCache = new Map<number, { start: number, timeout: number }>();
 
 export default () => {
@@ -197,9 +198,8 @@ export default () => {
           },
           waitMessage: (lookupMsg: string, timeout = 1000, cmd = '') => new Promise<string>((resolve, reject) => {
             const start = Date.now();
-            const offs = messages.length-1;
             const hTimer = setInterval(() => {
-              const msg = messages.find((msg, idx) => idx >= offs && msg.includes(lookupMsg));
+              const msg = messages.find((msg, idx) => msg.includes(lookupMsg));
               if (!msg && Date.now() - start > timeout) {
                 clearInterval(hTimer);
                 return reject('timeout');
