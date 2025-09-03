@@ -24,7 +24,7 @@ export class CircularBuffer<T> {
   }
 
   find(param: (e: T, idx: number) => boolean): T | undefined {
-    for(let i = 0; i < this.capacity; i++) {
+    for(let i = this.startOffset; i < (this.needShift ? this.capacity : 0) + this.endOffset; i++) {
       const relIdx = (this.startOffset+i)%this.capacity;
       if (param(this.arr[relIdx], i)) return this.arr[relIdx];
     }
