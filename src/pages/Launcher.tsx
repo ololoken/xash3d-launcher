@@ -74,9 +74,7 @@ export default () => {
 
   useEffect(() => {
     config.onChangeLocalization(sdk.environment.i18n.lang === 'ru' ? 'ru-RU' : 'en-US');
-    if (!instance || !mainRunning) return;
-    instance.executeString(`ui_language ${sdk.environment.i18n.lang === 'ru' ? 'russian' : 'english'}`)
-  }, [sdk.environment.i18n.lang, instance, mainRunning]);
+  }, [sdk.environment.i18n.lang]);
 
   useEffect(() => {
     if (!readyToRun || !instance) return;
